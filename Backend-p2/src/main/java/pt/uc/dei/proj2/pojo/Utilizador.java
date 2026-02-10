@@ -2,18 +2,22 @@ package pt.uc.dei.proj2.pojo;
 
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 
 @XmlRootElement
 public class Utilizador {
 
-    int id;
-    String primeiroNome;
-    String ultimoNome;
-    String email;
-    String telefone;
-    String username;
-    String senha;
+    public int id;
+    public String primeiroNome;
+    public String ultimoNome;
+    public String email;
+    public String telefone;
+    public String username;
+    public String senha;
+
+    public List <Lead> leadList;
+    public List<Cliente> clienteList;
 
     public Utilizador() {
     }
