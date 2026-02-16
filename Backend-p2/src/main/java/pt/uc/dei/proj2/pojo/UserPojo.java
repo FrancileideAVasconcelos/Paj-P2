@@ -6,7 +6,7 @@ import java.util.List;
 
 
 @XmlRootElement
-public class Utilizador {
+public class UserPojo {
 
     public int id;
     public String primeiroNome;
@@ -14,21 +14,23 @@ public class Utilizador {
     public String email;
     public String telefone;
     public String username;
-    public String senha;
+    public String password;
 
     public List <Lead> leadList;
     public List<Cliente> clienteList;
 
-    public Utilizador() {
+    public UserPojo(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
-    public Utilizador(String primeiroNome, String ultimoNome, String email, String telefone, String username, String senha) {
+    public UserPojo(String primeiroNome, String ultimoNome, String email, String telefone, String username, String password) {
         this.primeiroNome = primeiroNome;
         this.ultimoNome = ultimoNome;
         this.email = email;
         this.telefone = telefone;
         this.username = username;
-        this.senha = senha;
+        this.password = password;
     }
 
     @XmlElement
@@ -86,11 +88,11 @@ public class Utilizador {
     }
 
     @XmlElement
-    public String getSenha() {
-        return senha;
+    public String getPassword() {
+        return password;
     }
 
-    public void setSenha(String senha) {
-        this.senha = senha;
+    public void setPassword(String senha) {
+        this.password = senha;
     }
 }
