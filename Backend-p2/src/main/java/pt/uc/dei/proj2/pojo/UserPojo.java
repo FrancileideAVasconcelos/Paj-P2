@@ -2,35 +2,42 @@ package pt.uc.dei.proj2.pojo;
 
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+
+import java.util.ArrayList;
 import java.util.List;
 
 
 @XmlRootElement
 public class UserPojo {
 
-    public int id;
-    public String primeiroNome;
-    public String ultimoNome;
-    public String email;
-    public String telefone;
-    public String username;
-    public String password;
+    private int id;
+    private String primeiroNome;
+    private String ultimoNome;
+    private String email;
+    private String telefone;
+    private String username;
+    private String password;
+    private String fotoUrl; // Requisito: URL da imagem [cite: 57]
 
-    public List <Lead> leadList;
-    public List<Cliente> clienteList;
+    private List <Lead> leadList;
+    private List<Cliente> clienteList;
+    private List<Object> projectsList;
 
-    public UserPojo(String username, String password) {
-        this.username = username;
-        this.password = password;
+    public UserPojo(){
+        this.leadList = new ArrayList<>();
+        this.clienteList = new ArrayList<>();
+        this.projectsList = new ArrayList<>();
     }
 
-    public UserPojo(String primeiroNome, String ultimoNome, String email, String telefone, String username, String password) {
+    public UserPojo(String primeiroNome, String ultimoNome, String email, String telefone, String username, String password, String fotoUrl) {
+        this();
         this.primeiroNome = primeiroNome;
         this.ultimoNome = ultimoNome;
         this.email = email;
         this.telefone = telefone;
         this.username = username;
         this.password = password;
+        this.fotoUrl = fotoUrl;
     }
 
     @XmlElement
@@ -94,5 +101,14 @@ public class UserPojo {
 
     public void setPassword(String senha) {
         this.password = senha;
+    }
+
+    @XmlElement
+    public String getFotoUrl() {
+        return fotoUrl;
+    }
+
+    public void setFotoUrl(String fotoUrl) {
+        this.fotoUrl = fotoUrl;
     }
 }

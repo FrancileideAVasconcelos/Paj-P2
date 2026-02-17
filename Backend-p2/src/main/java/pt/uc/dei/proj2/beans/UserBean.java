@@ -12,29 +12,28 @@ import java.io.Serializable;
 public class UserBean implements Serializable {
 
     @Inject
-    ActivityBean activityBean;
+    StorageBean storageBean;
 
     @Inject
     LoginBean loginBean;
 
     public boolean login(String username, String password){
-        UserPojo u = activityBean.getUser(username,password);
-        if(u!= null){
+        UserPojo u = storageBean.findUser(username);
+        if (u != null && u.getPassword().equals(password)) {
             loginBean.setCurrentUser(u);
             return true;
         }
-        else
-            return false;
+        return false;
     }
 
-    public boolean register(String username, String password){
-        UserPojo u = activityBean.getUser(username, password);
-        if (u==null){
-            u= new UserPojo(username,password);
-            activityBean.addUser(u);
-            return true;
-        }else
-            return false;
+    public boolean register(UserPojo newUser) {
+        // 1. Verificar se o utilizador já existe no storage
+        UserPojo existing = storageBean.findUser(newUser.getUsername());
+        if (existing != null) return false;
+
+        // 2. Adicionar ao storage e gravar no ficheiro JSON
+        storageBean.addUser(newUser);
+        return true;
     }
 
     public UserDto getLoggeduser(){
@@ -42,6 +41,14 @@ public class UserBean implements Serializable {
         if(u!= null)
             return converUserPojoToUserDto(u);
         else return null;
+    }
+
+    public UserPojo findUser(String username) {
+        return storageBean.findUser(username);
+    }
+
+    public void updateUser(String username, UserPojo newData){
+        storageBean.updateUserData(username, newData);
     }
 
     private UserDto converUserPojoToUserDto(UserPojo up){

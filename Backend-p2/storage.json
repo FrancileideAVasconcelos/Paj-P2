@@ -1,0 +1,14 @@
+{
+    "users": [
+        {
+            "email": "teste@email.com",
+            "fotoUrl": "https://link-da-imagem.jpg",
+            "id": 0,
+            "password": "pass1",
+            "primeiroNome": "Teste",
+            "telefone": "911222333",
+            "ultimoNome": "Utilizador",
+            "username": "user1"
+        }
+    ]
+}
