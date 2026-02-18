@@ -4,10 +4,9 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @XmlRootElement
-public class Lead {
+public class LeadPojo {
 
     private int id;
     private String titulo;
@@ -15,10 +14,10 @@ public class Lead {
     private int estado;
     private LocalDate dataCriacao;
 
-    public Lead() {
+    public LeadPojo() {
     }
 
-    public Lead(int id, String titulo, String descricao, int estado) {
+    public LeadPojo(int id, String titulo, String descricao, int estado) {
         this.id = id;
         this.titulo = titulo;
         this.descricao = descricao;

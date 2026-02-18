@@ -19,18 +19,19 @@ public class UserPojo {
     private String password;
     private String fotoUrl; // Requisito: URL da imagem [cite: 57]
 
-    private List <Lead> leadList;
-    private List<Cliente> clienteList;
+    private List <LeadPojo> meusLeads;
+    private List<ClientPojo> meusClientes;
     private List<Object> projectsList;
 
     public UserPojo(){
-        this.leadList = new ArrayList<>();
-        this.clienteList = new ArrayList<>();
+        this.meusLeads = new ArrayList<>();
+        this.meusClientes = new ArrayList<>();
         this.projectsList = new ArrayList<>();
     }
 
-    public UserPojo(String primeiroNome, String ultimoNome, String email, String telefone, String username, String password, String fotoUrl) {
+    public UserPojo(int id,String primeiroNome, String ultimoNome, String email, String telefone, String username, String password, String fotoUrl) {
         this();
+        this.id = id;
         this.primeiroNome = primeiroNome;
         this.ultimoNome = ultimoNome;
         this.email = email;
@@ -112,15 +113,21 @@ public class UserPojo {
         this.fotoUrl = fotoUrl;
     }
 
-    public List<Lead> getLeadList() {
-        return leadList;
+    @XmlElement
+    public List<LeadPojo> getMeusLeads() {
+        return meusLeads;
     }
 
-    public List<Cliente> getClienteList() {
-        return clienteList;
+    public void setMeusLeads(List<LeadPojo> meusLeads) {
+        this.meusLeads = meusLeads;
     }
 
-    public List<Object> getProjectsList() {
-        return projectsList;
+    @XmlElement
+    public List<ClientPojo> getMeusClientes() {
+        return meusClientes;
+    }
+
+    public void setMeusClientes(List<ClientPojo> meusClientes) {
+        this.meusClientes = meusClientes;
     }
 }
