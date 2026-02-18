@@ -9,17 +9,21 @@ import java.util.Date;
 @XmlRootElement
 public class Lead {
 
-    int id;
-    String titulo;
-    String descricao;
-    String estado;
-    LocalDate dataCriacao = LocalDate.now();
+    private int id;
+    private String titulo;
+    private String descricao;
+    private int estado;
+    private LocalDate dataCriacao;
 
-    public Lead(String titulo, String descricao, String estado) {
+    public Lead() {
+    }
+
+    public Lead(int id, String titulo, String descricao, int estado) {
+        this.id = id;
         this.titulo = titulo;
         this.descricao = descricao;
         this.estado = estado;
-        this.dataCriacao = dataCriacao;
+        this.dataCriacao = LocalDate.now();
     }
 
     @XmlElement
@@ -50,11 +54,11 @@ public class Lead {
     }
 
     @XmlElement
-    public String getEstado() {
+    public int getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(int estado) {
         this.estado = estado;
     }
 
@@ -62,4 +66,6 @@ public class Lead {
     public LocalDate getDataCriacao() {
         return dataCriacao;
     }
+
+
 }

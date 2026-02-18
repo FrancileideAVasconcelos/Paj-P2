@@ -4,9 +4,11 @@ package pt.uc.dei.proj2.beans;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import pt.uc.dei.proj2.dto.UserDto;
+import pt.uc.dei.proj2.pojo.Lead;
 import pt.uc.dei.proj2.pojo.UserPojo;
 
 import java.io.Serializable;
+import java.util.List;
 
 @RequestScoped
 public class UserBean implements Serializable {
@@ -55,5 +57,88 @@ public class UserBean implements Serializable {
         UserDto ud = new UserDto(up.getUsername(), up.getPassword());
         return ud;
     }
+
+    // ----LEADS-----
+
+    // Gerar ID
+
+    private int generateLeadId(UserPojo user) {
+
+        int max = 0;
+
+        for (Lead l : user.getLeadList()) {
+            if (l.getId() > max) {
+                max = l.getId();
+            }
+        }
+
+        return max + 1;
+
+    }
+
+    // Criar Lead
+
+    public Lead createLead(String username, String title, String description, int state) {
+
+        UserPojo user = findUser(username);
+
+        if (user == null) return null;
+
+        Lead lead = new Lead();
+
+        lead.setId(generateLeadId(user));
+        lead.setTitulo(title);
+        lead.setDescricao(description);
+        lead.setEstado(state);
+
+        user.getLeadList().add(lead);
+
+        return lead;
+    }
+
+    // Listar Leads
+
+    public List<Lead> getLeads(String username) {
+
+        UserPojo user = findUser(username);
+
+        if (user == null) return null;
+
+        return user.getLeadList();
+    }
+
+    // Editar Lead
+
+    public Lead updateLead(String username, int id, String title, String description, int state) {
+
+        UserPojo user = findUser(username);
+
+        if (user == null) return null;
+
+        for (Lead l : user.getLeadList()) {
+            if (l.getId() == id) {
+
+                l.setTitulo(title);
+                l.setDescricao(description);
+                l.setEstado(state);
+
+                return l;
+            }
+        }
+
+        return null;
+    }
+
+    // Apagar Lead
+
+    public boolean deleteLead(String username, int id) {
+
+        UserPojo user = findUser(username);
+
+        if (user == null) return false;
+
+        return user.getLeadList().removeIf(l -> l.getId() == id);
+    }
+
 
 }

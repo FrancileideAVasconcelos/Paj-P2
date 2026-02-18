@@ -111,4 +111,16 @@ public class UserPojo {
     public void setFotoUrl(String fotoUrl) {
         this.fotoUrl = fotoUrl;
     }
+
+    public List<Lead> getLeadList() {
+        return leadList;
+    }
+
+    public List<Cliente> getClienteList() {
+        return clienteList;
+    }
+
+    public List<Object> getProjectsList() {
+        return projectsList;
+    }
 }
