@@ -3,6 +3,7 @@ package pt.uc.dei.proj2.beans;
 
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
+import pt.uc.dei.proj2.dto.ClientDto;
 import pt.uc.dei.proj2.dto.UserDto;
 import pt.uc.dei.proj2.pojo.ClientPojo;
 import pt.uc.dei.proj2.pojo.UserPojo;
@@ -17,15 +18,15 @@ public class ClientBean implements Serializable {
     StorageBean storageBean;
 
     @Inject
-    public Boolean registarCliente(ClientPojo novoCliente, String usernameDono) throws Exception {
+    public Boolean registarCliente(ClientDto novoCliente, String usernameDono) throws Exception {
 
         boolean clienteExiste = existeClienteGlobal(novoCliente.getNome(),novoCliente.getEmpresa());
 
-        if (!clienteExiste){
+        if (clienteExiste){
             return false;
         }
 
-        // 2. Chama o método genérico do StorageBean para obter o ID
+        // Chama o método genérico do StorageBean para obter o ID
         // Passamos a lista de todos os clientes do sistema e a regra para ler o ID
         List<ClientPojo> todosNoSistema = storageBean.getUsers().stream()
                 .flatMap(u -> u.getMeusClientes().stream())
@@ -50,11 +51,6 @@ public class ClientBean implements Serializable {
             }
         }
         return false;
-    }
-
-    private UserDto converUserPojoToUserDto(UserPojo up){
-        UserDto ud = new UserDto(up.getUsername(), up.getPassword());
-        return ud;
     }
 
 

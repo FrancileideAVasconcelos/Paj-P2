@@ -1,0 +1,93 @@
+header {  
+        background:rgb(54, 54, 140);
+         font-family: 'Courier New', Courier, monospace;
+         color: rgb(238, 238, 239);
+         padding: 20px;
+         border-style:solid;
+         border-image: linear-gradient(135deg, #38327e 0%, #764ba2 100%); 
+         grid-column: 1 / -1;
+     }
+
+.header-app {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 15px 30px;
+}
+
+.header-left {
+    display: flex;
+    align-items:center;
+    gap: 15px;
+}
+
+.header-right {
+    display: flex;
+    align-items: end;
+    margin-left: 0;
+}
+
+.logout-btn {
+    cursor: pointer;
+    hover {
+        transform: scale(1.05);
+    }
+}
+
+.header-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.header-welcome {
+    font-size: 18px;
+    margin-left: 110px;
+}
+
+
+body { 
+    /*ALTERAR*/
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f6fa;
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: auto 1fr auto;
+     
+}
+
+
+footer { 
+    background-color: rgb(237, 232, 232); 
+    color: rgb(0, 0, 0);
+    grid-column: 1 / -1;
+}
+
+.home-btn button {
+   background: rgb(34, 34, 198);
+}
+
+.btn {
+    background:  rgb(51, 181, 233);
+    border-radius: 100px;
+    border: none;
+    color: white;
+    padding: 12px 25px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.btn:hover {
+    background-color: #e09729;
+    transform: scale(1.03);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  filter: grayscale(20%);
+}
+

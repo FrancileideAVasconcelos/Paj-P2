@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Relationship Management</title>
+    <link rel="stylesheet" href="/CSS/login.css">
+    <link rel="stylesheet" href="/CSS/headerFooter.css">
+    <link rel="icon" type="image/x-icon" href="/imagens/favicon1.png">
+    <script src="/JavaScript/aplicacao.js" defer></script>
+
+</head>
+    
+<body>
+
+    <header>
+        <div id="header"></div>
+    </header>
+    
+
+    <main>
+        <div style="
+                width: 100%;
+                display: flex;
+                justify-content: center;">
+
+            <div class="login-container">
+                <h2>Registo</h2>
+                <form id="registerForm" class="login-form">
+                    <label>Primeiro nome:</label>
+                    <input type="text" id="regPrimeiroNome" required>
+                    <br>
+                    <label>Útimo nome: </label>
+                    <input type="text" id="regUltimoNome" required>
+                    <label>Telefone: </label>
+                    <input type="text" id="regTelefone" required>
+                    <label>Email: </label>
+                    <input type="text" id="regEmail" required>
+                    <label>Foto: </label>
+                    <input type="text" id="regFotoUrl" required>
+                    <label>Username: </label>
+                    <input type="text" id="regUsername" required>
+                    <label>Password </label>
+                    <input type="text" id="regPassword" required>
+
+
+                    <br><br>
+                    <button type="submit">Registar</button>
+                    <button type="button" onclick="window.location.href='login.html'" style="background-color: #667;">Voltar</button>
+                </form>
+            </div>
+        </div>       
+
+    </main>
+
+    <footer>
+        <div id="footer"></div>
+    </footer>
+
+    
+
+</body>
+</html>

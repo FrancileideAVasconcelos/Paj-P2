@@ -51,10 +51,6 @@ public class UserBean implements Serializable {
         storageBean.updateUserData(username, newData);
     }
 
-    private UserDto converUserPojoToUserDto(UserPojo up){
-        UserDto ud = new UserDto(up.getUsername(), up.getPassword());
-        return ud;
-    }
 
 
 }

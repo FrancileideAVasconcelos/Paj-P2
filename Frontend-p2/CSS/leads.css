@@ -1,0 +1,39 @@
+
+.lead-item {
+    background-color:darkblue;
+    margin-bottom: 10px;
+    margin-right: 50%;
+    border-radius: 30px;
+    content: normal;
+
+    
+}
+
+
+.lead-item button {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: #050a9e;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.lead-item button:hover {
+    background-color: #e09729;
+}
+
+.lead-titulo {
+    font-weight: bold;
+    text-align: left;
+}
+
+.lead-estado {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    white-space: nowrap;
+}
