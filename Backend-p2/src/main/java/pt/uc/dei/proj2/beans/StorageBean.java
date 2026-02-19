@@ -5,6 +5,7 @@ import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbConfig;
 import pt.uc.dei.proj2.pojo.ClientPojo;
+import pt.uc.dei.proj2.pojo.LeadPojo;
 import pt.uc.dei.proj2.pojo.UserPojo;
 
 import java.io.*;
@@ -106,4 +107,18 @@ public class StorageBean implements Serializable {
         save(); // Guarda a estrutura completa de volta no ficheiro
     }
 
+    // --------------- Leads ----------------
+
+    public void addLeads(LeadPojo lead, String username){
+        UserPojo user = findUser(username);
+
+            if (user != null){
+                user.getMeusLeads().add(lead);
+            }
+            save();
+    }
+
+
 }
+
+

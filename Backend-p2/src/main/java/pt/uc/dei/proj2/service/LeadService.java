@@ -4,8 +4,15 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import pt.uc.dei.proj2.beans.LeadBean;
+import pt.uc.dei.proj2.beans.StorageBean;
 import pt.uc.dei.proj2.beans.UserBean;
+import pt.uc.dei.proj2.dto.ClientDto;
+import pt.uc.dei.proj2.dto.LeadDto;
+import pt.uc.dei.proj2.pojo.ClientPojo;
 import pt.uc.dei.proj2.pojo.LeadPojo;
+
+import java.util.List;
 
 @Path("/users/{username}/leads")
 @Produces(MediaType.APPLICATION_JSON)
@@ -14,43 +21,53 @@ import pt.uc.dei.proj2.pojo.LeadPojo;
 public class LeadService {
 
     @Inject
-    UserBean userBean;
+    LeadBean leadBean;
 
     // =============================
     // LISTAR
     // =============================
     @GET
-    public Response getLeads(@PathParam("username") String username,
-                             @HeaderParam("password") String password) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getLeads(@HeaderParam("username") String username) {
 
-        if (!userBean.login(username, password)) {
-            return Response.status(401).build();
+        if (username == null || username.isEmpty()) {
+            return Response.status(401).entity("Acesso negado").build();
         }
 
-        return Response.ok(userBean.getLeads(username)).build();
+        // Retorna a lista de leads do utilizador logado
+        List<LeadPojo> leads = leadBean.getLeads(username);
+        return Response.status(200).entity(leads).build();
     }
 
     // =============================
     // CRIAR
     // =============================
     @POST
-    public Response createLead(@PathParam("username") String username,
-                               @HeaderParam("password") String password,
-                               LeadPojo dto) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addLead(@HeaderParam("username") String username, LeadDto leadDto) {
 
-        if (!userBean.login(username, password)) {
-            return Response.status(401).build();
+        // 1. Verificação de Autenticação (como fazes no login/register)
+        if (username == null || username.isEmpty()) {
+            return Response.status(401).entity("Utilizador não autenticado").build();
         }
 
-        LeadPojo leadPojo = userBean.createLead(
-                username,
-                dto.getTitulo(),
-                dto.getDescricao(),
-                dto.getEstado()
-        );
+        // Validação básica de campos obrigatórios do DTO
+        if (leadDto.getTitulo() == null || leadDto.getDescricao() == null) {
+            return Response.status(400).entity("Dados incompletos: Título e Descrição são obrigatórios").build();
+        }
 
-        return Response.status(201).entity(leadPojo).build();
+        try {
+            // 2. Tenta registar (o Bean vai validar duplicados Nome+Empresa e gerar o ID)
+            LeadPojo newLead = leadBean.createLead(username, leadDto);
 
+            // Retorna 201 Created com o objeto criado
+            return Response.status(201).entity(newLead).build();
+
+        } catch (Exception e) {
+            // 3. Se o Bean lançar exceção (ex: cliente já existe), retorna 409 Conflict
+            return Response.status(409).entity(e.getMessage()).build();
+        }
     }
 
     // =============================

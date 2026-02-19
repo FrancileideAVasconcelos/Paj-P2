@@ -3,11 +3,13 @@ package pt.uc.dei.proj2.beans;
 
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
+import pt.uc.dei.proj2.dto.LeadDto;
 import pt.uc.dei.proj2.pojo.LeadPojo;
 import pt.uc.dei.proj2.pojo.UserPojo;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.ArrayList;
 
 @Stateless
 public class LeadBean implements Serializable {
@@ -17,7 +19,7 @@ public class LeadBean implements Serializable {
 
     // Gerar ID
 
-    private int generateLeadId(UserPojo user) {
+    /*private int generateLeadId(UserPojo user) {
 
         int max = 0;
 
@@ -30,25 +32,26 @@ public class LeadBean implements Serializable {
         return max + 1;
 
     }
-
+*/
     // Criar Lead
 
-    public LeadPojo createLead(String username, String title, String description, int state) {
+    public LeadPojo createLead(String username, LeadDto leadDto) {
 
-        UserPojo user = findUser(username);
+        int nextId = storageBean.generateNextId(
+                storageBean.getUsers().stream()
+                        .flatMap(u -> u.getMeusLeads().stream())
+                        .toList(), LeadPojo::getId);
+        LeadPojo novaLead = new LeadPojo();
 
-        if (user == null) return null;
+        novaLead.setId(nextId);
+        novaLead.setTitulo(leadDto.getTitulo());
+        novaLead.setDescricao(leadDto.getDescricao());
+        novaLead.setEstado(0);
 
-        LeadPojo leadPojo = new LeadPojo();
+        storageBean.addLeads(novaLead,username);
 
-        leadPojo.setId(generateLeadId(user));
-        leadPojo.setTitulo(title);
-        leadPojo.setDescricao(description);
-        leadPojo.setEstado(state);
+        return novaLead;
 
-        user.getMeusLeads().add(leadPojo);
-
-        return leadPojo;
     }
 
     // Listar Leads
@@ -77,6 +80,8 @@ public class LeadBean implements Serializable {
                 l.setDescricao(description);
                 l.setEstado(state);
 
+                storageBean.addLeads(l,username);
+
                 return l;
             }
         }
@@ -88,7 +93,7 @@ public class LeadBean implements Serializable {
 
     public boolean deleteLead(String username, int id) {
 
-        UserPojo user = findUser(username);
+        UserPojo user = storageBean.findUser(username);
 
         if (user == null) return false;
 
