@@ -4,9 +4,9 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import pt.uc.dei.proj2.bean.ClientBean;
-import pt.uc.dei.proj2.dto.ClienteDto;
-import pt.uc.dei.proj2.pojo.ClientePojo;
+import pt.uc.dei.proj2.beans.ClientBean;
+import pt.uc.dei.proj2.dto.ClientDto;
+import pt.uc.dei.proj2.pojo.ClientPojo;
 import java.util.List;
 
 @Path("/clientes")
@@ -32,7 +32,7 @@ public class ClientService {
 
         try {
             // 2. Tenta registar (o Bean vai validar duplicados Nome+Empresa e gerar o ID)
-            ClientPojo novo = clientBean.registarNovoCliente(clienteDto, username);
+            ClientPojo novo = clientBean.registarCliente(clienteDto, username);
 
             // Retorna 201 Created com o objeto criado
             return Response.status(201).entity(novo).build();
@@ -52,7 +52,7 @@ public class ClientService {
         }
 
         // Retorna a lista de clientes do utilizador logado
-        List<ClientePojo> clientes = clientBean.listarClientesPorUtilizador(username);
+        List<ClientPojo> clientes = clientBean.listClients(username);
         return Response.status(200).entity(clientes).build();
     }
 }

@@ -9,6 +9,7 @@ import pt.uc.dei.proj2.pojo.ClientPojo;
 import pt.uc.dei.proj2.pojo.UserPojo;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Stateless
@@ -17,26 +18,30 @@ public class ClientBean implements Serializable {
     @Inject
     StorageBean storageBean;
 
-    @Inject
-    public Boolean registarCliente(ClientDto novoCliente, String usernameDono) throws Exception {
+    public ClientPojo registarCliente(ClientDto newClient, String usernameDono) throws Exception {
 
-        boolean clienteExiste = existeClienteGlobal(novoCliente.getNome(),novoCliente.getEmpresa());
-
-        if (clienteExiste){
-            return false;
+        if (existeClienteGlobal(newClient.getNome(),newClient.getEmpresa())){
+            throw new Exception("Este cliente já está registado nesta empresa por outro utilizador.");
         }
 
         // Chama o método genérico do StorageBean para obter o ID
         // Passamos a lista de todos os clientes do sistema e a regra para ler o ID
-        List<ClientPojo> todosNoSistema = storageBean.getUsers().stream()
-                .flatMap(u -> u.getMeusClientes().stream())
-                .toList();
+        List<ClientPojo> todosClientes = storageBean.findUser(usernameDono).getMeusClientes();
 
-        int proximoId = storageBean.generateNextId(todosNoSistema, ClientPojo::getId);
-        novoCliente.setId(proximoId);
+        int nextId = storageBean.generateNextId(todosClientes, ClientPojo::getId);
 
-        storageBean.addCliente(novoCliente, usernameDono);
-        return true;
+        ClientPojo finalClient = new ClientPojo();
+
+        finalClient.setId(nextId);
+        finalClient.setNome(newClient.getNome());
+        finalClient.setEmail(newClient.getEmail());
+        finalClient.setTelefone(newClient.getTelefone());
+        finalClient.setEmpresa(newClient.getEmpresa());
+        finalClient.setDono(usernameDono);
+
+        storageBean.addCliente(finalClient, usernameDono);
+
+        return finalClient;
     }
 
     public boolean existeClienteGlobal(String nome, String empresa) {
@@ -53,5 +58,9 @@ public class ClientBean implements Serializable {
         return false;
     }
 
+    public List<ClientPojo> listClients(String username) {
+        UserPojo user = storageBean.findUser(username);
+        return (user != null) ? user.getMeusClientes() : new ArrayList<>();
+    }
 
 }
