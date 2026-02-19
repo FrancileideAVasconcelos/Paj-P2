@@ -73,7 +73,7 @@ public class LeadService {
     // =============================
     // EDITAR
     // =============================
-    @PUT
+   /* @PUT
     @Path("/{id}")
     public Response updateLead(@PathParam("username") String username,
                                @PathParam("id") int id,
@@ -119,6 +119,6 @@ public class LeadService {
         }
 
         return Response.ok().build();
-    }
+    }*/
 
 }

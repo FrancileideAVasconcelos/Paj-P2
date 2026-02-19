@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import jakarta.json.bind.JsonbConfig;
+import pt.uc.dei.proj2.dto.ClientDto;
 import pt.uc.dei.proj2.pojo.ClientPojo;
 import pt.uc.dei.proj2.pojo.LeadPojo;
 import pt.uc.dei.proj2.pojo.UserPojo;
@@ -103,8 +104,37 @@ public class StorageBean implements Serializable {
 
         if (user != null) {
             user.getMeusClientes().add(cliente); // Adiciona na lista aninhada
+            save(); // Guarda a estrutura completa de volta no ficheiro
         }
-        save(); // Guarda a estrutura completa de volta no ficheiro
+    }
+
+    public void updateClientData(int id, ClientDto dto) {
+        for (UserPojo u : root.users) {
+            for (ClientPojo c : u.getMeusClientes()) {
+                if (c.getId() == id) {
+                    // Atualiza apenas os campos permitidos
+                    c.setNome(dto.getNome());
+                    c.setEmail(dto.getEmail());
+                    c.setTelefone(dto.getTelefone());
+                    c.setEmpresa(dto.getEmpresa());
+
+                    save(); // Persiste no storage.json
+                    return;
+                }
+            }
+        }
+    }
+
+    public boolean deletClient(int id) {
+        for (UserPojo u : root.users) {
+            // Tenta remover da lista de cada utilizador
+            boolean removido = u.getMeusClientes().removeIf(c -> c.getId() == id);
+            if (removido) {
+                save(); // Grava a alteração no storage.json
+                return true;
+            }
+        }
+        return false;
     }
 
     // --------------- Leads ----------------

@@ -5,38 +5,27 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class UserDto {
+    private int id;
     private String username;
     private String password;
-    private String nome;
+    private String primeiroNome;
+    private String ultimoNome;
     private String email;
     private String fotoUrl;
     private String telefone;
-
-    public UserDto(){
-
-    }
-    public UserDto(String username, String password, String nome, String email, String fotoUrl, String telefone) {
-        this.username = username;
-        this.password = password;
-        this.nome = nome;
-        this.email = email;
-        this.fotoUrl = fotoUrl;
-        this.telefone = telefone;
-
-    }
+    
     @XmlElement
     public String getUsername() {
         return username;
     }
-
     public void setUsername(String username) {
         this.username = username;
     }
+
     @XmlElement
     public String getPassword() {
         return password;
     }
-
     public void setPassword(String password) {
         this.password = password;
     }
@@ -45,7 +34,6 @@ public class UserDto {
     public String getTelefone() {
         return telefone;
     }
-
     public void setTelefone(String telefone) {
         this.telefone = telefone;
     }
@@ -54,7 +42,6 @@ public class UserDto {
     public String getFotoUrl() {
         return fotoUrl;
     }
-
     public void setFotoUrl(String fotoUrl) {
         this.fotoUrl = fotoUrl;
     }
@@ -63,17 +50,31 @@ public class UserDto {
     public String getEmail() {
         return email;
     }
-
     public void setEmail(String email) {
         this.email = email;
     }
 
     @XmlElement
-    public String getNome() {
-        return nome;
+    public String getPrimeiroNome() {
+        return primeiroNome;
+    }
+    public void setPrimeiroNome(String primeiroNome) {
+        this.primeiroNome = primeiroNome;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    @XmlElement
+    public String getUltimoNome() {
+        return ultimoNome;
+    }
+    public void setUltimoNome(String ultimoNome) {
+        this.ultimoNome = ultimoNome;
+    }
+
+    @XmlElement
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
     }
 }

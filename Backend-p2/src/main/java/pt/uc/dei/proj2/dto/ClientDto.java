@@ -10,6 +10,7 @@ public class ClientDto {
     private String email;
     private String telefone;
     private String empresa;
+    private String dono;
 
     public ClientDto() {}
 
@@ -33,4 +34,12 @@ public class ClientDto {
     @XmlElement
     public String getEmpresa() { return empresa; }
     public void setEmpresa(String empresa) { this.empresa = empresa; }
+
+    @XmlElement
+    public String getDono() {
+        return dono;
+    }
+    public void setDono(String dono) {
+        this.dono = dono;
+    }
 }

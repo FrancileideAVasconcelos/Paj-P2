@@ -1,209 +1,106 @@
-// ficheiro responsável pela gestão de clientes (adicionar, listar, editar e remover) com persistência em localStorage
+const API_URL = "http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/clientes";
+let clienteList = [];
 
-// objeto cliente
-var cliente = {nome : "", email : "", telefone : "", empresa : ""};
+// --- 1. COMUNICAÇÃO COM O SERVIDOR ---
 
-
-// Array de clientes
-let clienteList = new Array();
-
-
-// Função para adicionar um cliente
-function adicionarCliente(nome, email, telefone, empresa) {
-
-    var novoCliente = Object.create(cliente);
-    novoCliente.nome = nome;
-    novoCliente.email = email;
-    novoCliente.telefone = telefone;
-    novoCliente.empresa = empresa;
-
-    clienteList.push(novoCliente); 
-
-    // guarda no localStorage
-    // ordena os clientes por ordem alfabetica
-    // localeCompare compara strings, sort - ordena, neste caso por ordem alfabetica
-    clienteList.sort(function(a, b) {
-        return a.nome.localeCompare(b.nome);
-    });
-
-    localStorage.setItem("clientes", JSON.stringify(clienteList));
-    console.log("Cliente adicionado:", novoCliente);
-
+async function apiCall(endpoint, method, body = null) {
+    const username = sessionStorage.getItem("username");
+    const options = {
+        method: method,
+        headers: { "Content-Type": "application/json", "username": username }
+    };
+    if (body) options.body = JSON.stringify(body);
+    return fetch(endpoint, options);
 }
 
-function guardarCliente(index = null) {
+// --- 2. GESTÃO DE DADOS (CRUD) ---
 
-    const nome = document.getElementById("clienteNome").value;
-    const email = document.getElementById("clienteEmail").value;
-    const telefone = document.getElementById("clienteTelefone").value;
-    const empresa = document.getElementById("clienteEmpresa").value;
-
-    // verifica se os campos obrigatórios estão preenchidos: nome empresa e pelo menos um contacto (email ou telefone)
-    // trim() remove espaços em branco no início e no fim da string, ex: quando o utilizador insere apenas espaços
-    if (nome.trim() === "" || empresa.trim() === "" || (email.trim() === "" && telefone.trim() === "")) {
-        return; 
+async function carregarClientes() {
+    const response = await apiCall(API_URL, "GET");
+    if (response.ok) {
+        clienteList = await response.json();
+        clienteList.sort((a, b) => a.nome.localeCompare(b.nome));
+        listarClientes();
     }
+}
 
-    // uso de expressões regex para validar numero de telefone e email
-    // telefone deve ter 9 digitos e começar por 2 ou 9
-    if (telefone !=="" && !/^[29][0-9]{8}$/.test(telefone)) {
-        alert("Digite um número de telefone válido.");
-        return;
-    }
+async function guardarCliente(index = null) {
+    const dados = {
+        nome: document.getElementById("clienteNome").value,
+        email: document.getElementById("clienteEmail").value,
+        telefone: document.getElementById("clienteTelefone").value,
+        empresa: document.getElementById("clienteEmpresa").value
+    };
 
-    // email deve ter algo != de espaçp ou @ antes do @, depois do @ deve ter algo != de espaço ou @, depois um ponto e depois algo != de espaço ou @
-    if (email !=="" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        alert("Digite um email válido.");
-        return;
-    }
+    // --- AS TUAS VALIDAÇÕES ORIGINAIS ---
+    if (dados.nome.trim() === "" || dados.empresa.trim() === "" || (dados.email.trim() === "" && dados.telefone.trim() === "")) return;
+    if (dados.telefone !== "" && !/^[29][0-9]{8}$/.test(dados.telefone)) { alert("Telefone inválido."); return; }
+    if (dados.email !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dados.email)) { alert("Email inválido."); return; }
 
-
-    // se o index for null => o cliente ainda não existe, é um novo cliente
+    let response;
     if (index === null) {
-
-        adicionarCliente(nome, email, telefone, empresa);
-        
-        alert("Cliente adicionado com sucesso!");
-        console.log("Lista de clientes após adição:", clienteList);
-
+        response = await apiCall(API_URL, "POST", dados);
     } else {
-    // editar cliente já existente
-    clienteList[index].nome = nome;
-    clienteList[index].email = email;
-    clienteList[index].telefone = telefone;
-    clienteList[index].empresa = empresa;
-
-    // atualiza no localStorage: setItem()
-    localStorage.setItem("clientes", JSON.stringify(clienteList));
-    alert("Cliente editado com sucesso!");
-
-    console.log("Cliente editado:", clienteList[index]);
+        const idGlobal = clienteList[index].id;
+        response = await apiCall(`${API_URL}/${idGlobal}`, "PUT", dados);
     }
 
-    loadClientes();
-    window.location.href="dashboard.html#clientes"
+    if (response.ok) {
+        alert("Sucesso!");
+        window.location.href = "dashboard.html#clientes";
+    } else {
+        alert("Erro: " + await response.text());
+    }
 }
 
-
-// Função para listar todos os clientes
-function mostrarDetalhesCliente() {
+async function removerCliente(index) {
+    if (!confirm("Remover este cliente?")) return;
+    const idGlobal = clienteList[index].id;
+    const response = await apiCall(`${API_URL}/${idGlobal}`, "DELETE");
     
-    // carregar lista do localStorage
-    clienteList = JSON.parse(localStorage.getItem("clientes") || "[]");
+    if (response.ok) {
+        alert("Removido!");
+        window.location.href = "dashboard.html#clientes";
+    }
+}
 
-    const index = parseInt(localStorage.getItem("clienteSelecionado"), 10);
-    const detalhesDiv = document.getElementById("detalhesContent");
+// --- 3. INTERFACE (DOM) ---
 
-    if (!detalhesDiv) return;
+function listarClientes() {
+    const lista = document.getElementById("listaClientes");
+    if (!lista) return;
+    lista.innerHTML = clienteList.map((c, i) => `
+        <li class="cliente-item">
+            <button class="cliente-item-btn" onclick="abrirDetalhesCliente(${i})">
+                <strong>${c.nome}</strong>
+            </button>
+        </li>`).join("");
+}
 
-   
-    const c = clienteList[index];
+function abrirDetalhesCliente(index) {
+    sessionStorage.setItem("clienteSelecionadoIndex", index);
+    sessionStorage.setItem("clientesData", JSON.stringify(clienteList));
+    window.location.href = "detalhes.html";
+}
 
-    detalhesDiv.innerHTML = `
+function mostrarDetalhesCliente() {
+    const index = sessionStorage.getItem("clienteSelecionadoIndex");
+    const dados = JSON.parse(sessionStorage.getItem("clientesData") || "[]");
+    const div = document.getElementById("detalhesContent");
+    if (!div || index === null) return;
 
+    const c = dados[index];
+    div.innerHTML = `
         <p><strong>Nome:</strong> ${c.nome}</p>
         <p><strong>Email:</strong> ${c.email}</p>
         <p><strong>Telefone:</strong> ${c.telefone}</p> 
         <p><strong>Empresa:</strong> ${c.empresa}</p> 
-        
         <br>
-
-        <button class="btn" type="button" onclick="editarCliente(${index})"><img src="/imagens/editar.jpg" alt="icon" class="icon">Editar</button>
-        <button class="btn" type="button" onclick="removerCliente(${index})"><img src="/imagens/remover.jpg" alt="icon" class="icon">Remover</button>
-        <button class="btn" onclick="window.location.href='dashboard.html#clientes'"><img src="/imagens/voltar.jpg" alt="icon" class="icon">Voltar</button>
-    
-    `;
-    
+        <button class="btn" onclick="editarCliente(${index})"><img src="/imagens/editar.jpg" class="icon">Editar</button>
+        <button class="btn" onclick="removerCliente(${index})"><img src="/imagens/remover.jpg" class="icon">Remover</button>
+        <button class="btn" onclick="window.location.href='dashboard.html#clientes'"><img src="/imagens/voltar.jpg" class="icon">Voltar</button>`;
 }
 
-function listarClientes() {
-    
-    var listaClientes = document.getElementById("listaClientes");
-    listaClientes.innerHTML = ""; // Limpa a lista antes de adicionar novos elementos
-
-
-    for (var i = 0; i < clienteList.length; i++) {
-
-        listaClientes.innerHTML += `
-
-            <li class="cliente-item">
-                <button class = "cliente-item-btn" type="button" onclick="abrirDetalhesCliente(${i})"><strong>${clienteList[i].nome}</strong></button>
-            </li>
-            `;
-    }
-
-    console.log("Lista de clientes após ordenação:", clienteList);
-}
-
-
-function abrirDetalhesCliente(index) {
-  localStorage.setItem("clienteSelecionado", index);
-  window.location.href = "detalhes.html";
-}
-
-
-// Função para remover um cliente
-function removerCliente(index) {
-    if (confirm("Tem a certeza que deseja remover este cliente?")) {
-
-        clienteList.splice(index, 1); // Remove o cliente do array  
-
-        localStorage.setItem("clientes", JSON.stringify(clienteList)); 
-        alert("Cliente removido com sucesso!");
-
-        console.log("Cliente removido:", clienteList[index]); 
-
-        listarClientes();
-    }
-
-}
-
-// Função para editar um cliente
-function editarCliente(index) {
-    const cliente = clienteList[index];
-    content.innerHTML = `
-
-    <h2>Editar Cliente</h2> 
-    
-    <label>Nome</label>
-    <input id="clienteNome" type="text" value="${cliente.nome}">
-    <br><br>    
-
-    <label>Email</label>
-    <input id="clienteEmail" type="email" value="${cliente.email}">
-    <br><br>
-
-    <label>Telefone</label>
-    <input id="clienteTelefone" type="text" value="${cliente.telefone}">
-    <br><br>
-
-    <label>Empresa</label>
-    <input id="clienteEmpresa" type="text" value="${cliente.empresa}">
-    <br><br>
-
-    <button id="btnGuardarClienteEdicao" class="btn" disabled type="button" onclick="guardarCliente(${index})"><img src="/imagens/guardar.jpg" alt="icon" class="icon">Guardar</button>
-
-
-    <button class="btn" onclick="window.location.href='dashboard.html#clientes'"><img src="/imagens/cancelar.jpg" alt="icon" class="icon">Cancelar</button>
-    `;
-
-    ativarValidacaoEdicaoCliente(cliente);
-
-}
-           
-
-document.addEventListener("DOMContentLoaded", function() {
-    if (document.getElementById("detalhesContent")) {
-        mostrarDetalhesCliente();
-    }
-});
-
-function carregarClientes() {
-    const dados = JSON.parse(localStorage.getItem("clientes"));
-    if (dados) {
-        clienteList = dados;
-    }
-}
 // função que ativa/desativa o botºao Guardar na página ao adicionar novo cliente, dependendo se os campos obrigatórios estão preenchidos ou não
 function ativarValidacaoNovoCliente() {
 
@@ -272,5 +169,12 @@ function ativarValidacaoEdicaoCliente(clienteOriginal) {
   validar();
 }
 
+// Manter as funções de ativarValidacaoNovoCliente e ativarValidacaoEdicaoCliente aqui em baixo...
+// (Elas permanecem exatamente como as tinhas, pois funcionam bem)
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById("listaClientes")) carregarClientes();
+    if (document.getElementById("detalhesContent")) mostrarDetalhesCliente();
+});
 
 

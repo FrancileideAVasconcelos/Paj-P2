@@ -23,8 +23,7 @@ public class UserBean implements Serializable {
         return false;
     }
 
-    @Inject
-    public boolean register(UserPojo newUser) {
+    public boolean register(UserDto newUser) {
         // 1. Verificar se o utilizador já existe no storage
         UserPojo existing = storageBean.findUser(newUser.getUsername());
         if (existing != null) {
@@ -33,13 +32,24 @@ public class UserBean implements Serializable {
 
         //Gerar o ID único
         //lista total do storage e chama o método genérico
-        List<UserPojo> users = storageBean.getUsers();
+        //List<UserPojo> users = storageBean.getUsers();
 
-        int nextId = storageBean.generateNextId(users, UserPojo::getId);
-        newUser.setId(nextId);
+        int nextId = storageBean.generateNextId(storageBean.getUsers(), UserPojo::getId);
+
+        UserPojo user = new UserPojo();
+
+        user.setId(nextId);
+        user.setPrimeiroNome(newUser.getPrimeiroNome());
+        user.setUltimoNome(newUser.getUltimoNome());
+        user.setTelefone(newUser.getTelefone());
+        user.setEmail(newUser.getEmail());
+        user.setFotoUrl(newUser.getFotoUrl());
+        user.setUsername(newUser.getUsername());
+        user.setPassword(newUser.getPassword());
+
 
         // 2. Adicionar ao storage e gravar no ficheiro JSON
-        storageBean.addUser(newUser);
+        storageBean.addUser(user);
         return true;
     }
 

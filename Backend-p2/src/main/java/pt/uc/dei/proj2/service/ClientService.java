@@ -55,4 +55,44 @@ public class ClientService {
         List<ClientPojo> clientes = clientBean.listClients(username);
         return Response.status(200).entity(clientes).build();
     }
+
+    @PUT
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response editarCliente(@PathParam("id") int id, @HeaderParam("username") String username, ClientDto dto) {
+
+        // Validação de segurança básica
+        if (username == null || username.isEmpty()) {
+            return Response.status(401).entity("Não autorizado").build();
+        }
+        if (dto.getNome() == null || dto.getNome().trim().isEmpty() ||
+                dto.getEmpresa() == null || dto.getEmpresa().trim().isEmpty() ||
+                dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+            return Response.status(400).entity("Erro: Nome, Empresa e Email são obrigatórios para a edição").build();
+        }
+        try {
+            clientBean.editarCliente(id, dto);
+            return Response.status(200).entity("Cliente atualizado com sucesso").build();
+        } catch (Exception e) {
+            return Response.status(409).entity(e.getMessage()).build();
+        }
+    }
+
+    @DELETE
+    @Path("/{id}")
+    public Response eliminarCliente(@PathParam("id") int id, @HeaderParam("username") String username) {
+
+        // Verificação de segurança básica
+        if (username == null || username.isEmpty()) {
+            return Response.status(401).entity("Não autorizado").build();
+        }
+
+        boolean sucess = clientBean.deletClient(id);
+
+        if (sucess) {
+            return Response.status(200).entity("Cliente removido com sucesso").build();
+        } else {
+            return Response.status(404).entity("Cliente não encontrado com o ID: " + id).build();
+        }
+    }
 }
