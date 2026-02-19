@@ -24,11 +24,6 @@ h2 {
     margin-bottom: 10px;
 }
 
-.login-Form {
-    margin-top: 15px;
-    text-align: center;
-}
-
 .login-container {
     background: rgb(255, 255, 255);
     padding: 40px;
@@ -38,12 +33,17 @@ h2 {
     max-width: 400px; 
 }
 
-.login-container h1 {
-    text-align: center;
-    margin-bottom: 30px;
-    color: #fbfbfb;
-    font-size: 28px;
+section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
+
+#loginForm {
+    margin-top: 15px;
+    text-align: center;
+}
+
 
 .form-group {
     margin-bottom: 20px;
