@@ -1,180 +1,253 @@
 const API_URL = "http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/clientes";
 let clienteList = [];
 
-// --- 1. COMUNICAÇÃO COM O SERVIDOR ---
-
-async function apiCall(endpoint, method, body = null) {
-    const username = sessionStorage.getItem("username");
-    const options = {
-        method: method,
-        headers: { "Content-Type": "application/json", "username": username }
-    };
-    if (body) options.body = JSON.stringify(body);
-    return fetch(endpoint, options);
-}
-
-// --- 2. GESTÃO DE DADOS (CRUD) ---
+// ==========================================
+// 1. CARREGAR E LISTAR
+// ==========================================
 
 async function carregarClientes() {
-    const response = await apiCall(API_URL, "GET");
-    if (response.ok) {
-        clienteList = await response.json();
-        clienteList.sort((a, b) => a.nome.localeCompare(b.nome));
-        listarClientes();
+    const username = sessionStorage.getItem("username");
+    if (!username) return;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: "GET",
+            headers: { "username": username }
+        });
+
+        if (response.ok) {
+            clienteList = await response.json(); 
+            clienteList.sort((a, b) => a.nome.localeCompare(b.nome));
+            listarClientes(); // Substitui o ecrã pela lista
+        } else {
+            alert("Erro ao ir buscar clientes: " + await response.text());
+        }
+    } catch (error) {
+        console.error("Erro na ligação ao servidor:", error);
     }
 }
 
-async function guardarCliente(index = null) {
-    const dados = {
-        nome: document.getElementById("clienteNome").value,
-        email: document.getElementById("clienteEmail").value,
-        telefone: document.getElementById("clienteTelefone").value,
-        empresa: document.getElementById("clienteEmpresa").value
-    };
+function listarClientes() {
+    const main = document.getElementById("content"); 
+    if (!main) return;
 
-    // --- AS TUAS VALIDAÇÕES ORIGINAIS ---
-    if (dados.nome.trim() === "" || dados.empresa.trim() === "" || (dados.email.trim() === "" && dados.telefone.trim() === "")) return;
-    if (dados.telefone !== "" && !/^[29][0-9]{8}$/.test(dados.telefone)) { alert("Telefone inválido."); return; }
-    if (dados.email !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dados.email)) { alert("Email inválido."); return; }
+    let html = `
+        <div class="barra-clientes">
+            <h2>Clientes</h2>
+            <button class="btn" type="button"onclick="formNovoCliente()"><i class="fa-solid fa-user-plus"></i>Novo Cliente</button>
+        </div>
+        <!-- lista não ordenada de clientes -->
+        <ul id="listaClientes"></ul> 
+        <br>
+    `;
 
-    let response;
-    if (index === null) {
-        response = await apiCall(API_URL, "POST", dados);
+    if (clienteList.length === 0) {
+        html += `<p>Nenhum cliente guardado.</p>`;
     } else {
-        const idGlobal = clienteList[index].id;
-        response = await apiCall(`${API_URL}/${idGlobal}`, "PUT", dados);
+        html += clienteList.map((c, i) => `
+            <li class="cliente-item">
+                <button class="cliente-item-btn" onclick="mostrarDetalhesCliente(${i})">
+                    <strong>${c.nome}</strong> - ${c.empresa}
+                </button>
+            </li>`).join("");
     }
 
-    if (response.ok) {
-        alert("Sucesso!");
-        window.location.href = "dashboard.html#clientes";
-    } else {
-        alert("Erro: " + await response.text());
+    html += `</ul>`;
+    main.innerHTML = html; 
+}
+
+// ==========================================
+// 2. MOSTRAR DETALHES
+// ==========================================
+
+function mostrarDetalhesCliente(index) {
+    const c = clienteList[index];
+    const main = document.getElementById("content");
+
+    // Injetamos os detalhes diretamente no content (não precisa mudar de página HTML)
+    main.innerHTML = `
+        <div class="detalhes-container">
+            <h2>Detalhes do Cliente</h2>
+            <br>
+            <p><strong>Nome:</strong> ${c.nome}</p>
+            <p><strong>Email:</strong> ${c.email}</p>
+            <p><strong>Telefone:</strong> ${c.telefone}</p>
+            <p><strong>Empresa:</strong> ${c.empresa}</p>
+            <br>
+            <button class="btn" onclick="editarCliente(${index})"><i class="fa-regular fa-pen-to-square"></i>Editar</button>
+            <button class="btn" onclick="removerCliente(${index})"><i class="fa-solid fa-trash"></i>Remover</button>
+            <button class="btn" onclick="carregarClientes()"><i class="fa-solid fa-arrow-left"></i>Voltar</button>
+        </div>
+    `;
+}
+
+// ==========================================
+// 3. FORMULÁRIOS (NOVO E EDITAR)
+// ==========================================
+
+function formNovoCliente() {
+    const content = document.getElementById("content");
+    content.innerHTML = `
+        <h2>Novo Cliente</h2>
+        <label>Nome</label> <input id="clienteNome" type="text" required><br><br>
+        <label>Email</label> <input id="clienteEmail" type="email"><br><br>
+        <label>Telefone</label> <input id="clienteTelefone" type="text"><br><br>
+        <label>Empresa</label> <input id="clienteEmpresa" type="text" required><br><br>
+        
+        <button id="btnGuardarCliente" class="btn" disabled type="button" onclick="guardarCliente()">
+            <img src="/imagens/guardar.jpg" class="icon">Guardar
+        </button>
+        <button class="btn" type="button" onclick="carregarClientes()">
+            <img src="/imagens/remover.jpg" class="icon">Cancelar
+        </button>
+    `;
+    ativarValidacaoNovoCliente();
+}
+
+function editarCliente(index) {
+    const c = clienteList[index];
+    const main = document.getElementById("content");
+    
+    main.innerHTML = `
+        <h2>Editar Cliente</h2> 
+        <label>Nome</label> <input id="clienteNome" type="text" value="${c.nome}"> <br><br>
+        <label>Email</label> <input id="clienteEmail" type="email" value="${c.email}"> <br><br>
+        <label>Telefone</label> <input id="clienteTelefone" type="text" value="${c.telefone}"> <br><br>
+        <label>Empresa</label> <input id="clienteEmpresa" type="text" value="${c.empresa}"> <br><br>
+        
+        <button id="btnGuardarClienteEdicao" class="btn" disabled type="button" onclick="guardarCliente(${index})">
+            <img src="/imagens/guardar.jpg" class="icon">Guardar
+        </button>
+        <button class="btn" onclick="mostrarDetalhesCliente(${index})">
+            <img src="/imagens/remover.jpg" class="icon">Cancelar
+        </button>
+    `;
+    
+    ativarValidacaoEdicaoCliente(c);
+}
+
+// ==========================================
+// 4. CRUD (GUARDAR E REMOVER)
+// ==========================================
+
+async function guardarCliente(index = null) {
+    const nome = document.getElementById("clienteNome").value.trim();
+    const email = document.getElementById("clienteEmail").value.trim();
+    const telefone = document.getElementById("clienteTelefone").value.trim();
+    const empresa = document.getElementById("clienteEmpresa").value.trim();
+
+    if (nome === "" || empresa === "" || (email === "" && telefone === "")) return;
+    if (telefone !== "" && !/^[29][0-9]{8}$/.test(telefone)) { alert("Telefone inválido."); return; }
+    if (email !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert("Email inválido."); return; }
+
+    const dados = { nome, email, telefone, empresa };
+    const username = sessionStorage.getItem("username");
+    let response;
+
+    try {
+        if (index === null) {
+            // POST: Novo Cliente
+            response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "username": username },
+                body: JSON.stringify(dados)
+            });
+        } else {
+            // PUT: Editar Cliente
+            const idGlobal = clienteList[index].id; 
+            response = await fetch(`${API_URL}/${idGlobal}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", "username": username },
+                body: JSON.stringify(dados)
+            });
+        }
+
+        if (response.ok) {
+            alert(index === null ? "Cliente adicionado com sucesso!" : "Cliente atualizado com sucesso!");
+            await carregarClientes(); // Limpa e volta à lista
+        } else {
+            alert("Erro do Java: " + await response.text());
+        }
+    } catch (error) {
+        console.error("Falha ao guardar:", error);
     }
 }
 
 async function removerCliente(index) {
-    if (!confirm("Remover este cliente?")) return;
-    const idGlobal = clienteList[index].id;
-    const response = await apiCall(`${API_URL}/${idGlobal}`, "DELETE");
+    if (!confirm("Tem a certeza que deseja remover este cliente?")) return;
     
-    if (response.ok) {
-        alert("Removido!");
-        window.location.href = "dashboard.html#clientes";
+    const idGlobal = clienteList[index].id; 
+    const username = sessionStorage.getItem("username");
+
+    try {
+        const response = await fetch(`${API_URL}/${idGlobal}`, {
+            method: "DELETE",
+            headers: { "username": username }
+        });
+
+        if (response.ok) {
+            alert("Cliente removido!");
+            await carregarClientes(); // Recarrega a lista
+        } else {
+            alert("Erro ao remover: " + await response.text());
+        }
+    } catch (error) {
+        console.error("Erro na ligação:", error);
     }
 }
 
-// --- 3. INTERFACE (DOM) ---
+// ==========================================
+// 5. VALIDAÇÕES
+// ==========================================
 
-function listarClientes() {
-    const lista = document.getElementById("listaClientes");
-    if (!lista) return;
-    lista.innerHTML = clienteList.map((c, i) => `
-        <li class="cliente-item">
-            <button class="cliente-item-btn" onclick="abrirDetalhesCliente(${i})">
-                <strong>${c.nome}</strong>
-            </button>
-        </li>`).join("");
-}
-
-function abrirDetalhesCliente(index) {
-    sessionStorage.setItem("clienteSelecionadoIndex", index);
-    sessionStorage.setItem("clientesData", JSON.stringify(clienteList));
-    window.location.href = "detalhes.html";
-}
-
-function mostrarDetalhesCliente() {
-    const index = sessionStorage.getItem("clienteSelecionadoIndex");
-    const dados = JSON.parse(sessionStorage.getItem("clientesData") || "[]");
-    const div = document.getElementById("detalhesContent");
-    if (!div || index === null) return;
-
-    const c = dados[index];
-    div.innerHTML = `
-        <p><strong>Nome:</strong> ${c.nome}</p>
-        <p><strong>Email:</strong> ${c.email}</p>
-        <p><strong>Telefone:</strong> ${c.telefone}</p> 
-        <p><strong>Empresa:</strong> ${c.empresa}</p> 
-        <br>
-        <button class="btn" onclick="editarCliente(${index})"><img src="/imagens/editar.jpg" class="icon">Editar</button>
-        <button class="btn" onclick="removerCliente(${index})"><img src="/imagens/remover.jpg" class="icon">Remover</button>
-        <button class="btn" onclick="window.location.href='dashboard.html#clientes'"><img src="/imagens/voltar.jpg" class="icon">Voltar</button>`;
-}
-
-// função que ativa/desativa o botºao Guardar na página ao adicionar novo cliente, dependendo se os campos obrigatórios estão preenchidos ou não
 function ativarValidacaoNovoCliente() {
+    const nome = document.getElementById("clienteNome");
+    const email = document.getElementById("clienteEmail");
+    const telefone = document.getElementById("clienteTelefone");
+    const empresa = document.getElementById("clienteEmpresa");
+    const btn = document.getElementById("btnGuardarCliente");
 
-    // vai buscar os elemntos de input, pelo id, do nome, email, telefone, empresa e o botão Guardar 
-  const nome = document.getElementById("clienteNome");
-  const email = document.getElementById("clienteEmail");
-  const telefone = document.getElementById("clienteTelefone");
-  const empresa = document.getElementById("clienteEmpresa");
-  // vai buscar o botão para controlar o seu estado dinamicamente
-  const btn = document.getElementById("btnGuardarCliente");
+    if (!nome || !btn) return;
 
-  if (!nome || !email || !telefone || !empresa || !btn) return;
+    const validar = () => {
+        const nomeOk = nome.value.trim() !== "";
+        const empresaOk = empresa.value.trim() !== "";
+        const contactoOk = email.value.trim() !== "" || telefone.value.trim() !== "";
+        btn.disabled = !(nomeOk && empresaOk && contactoOk);
+    };
 
-  const validar = () => {
-    // função verifica se os elemntos obrigatórios foram preenchidos ou um dos contactos. Se sim, ativa o botão Guardar.
-    const nomeOk = nome.value.trim() !== "";
-    const empresaOk = empresa.value.trim() !== "";
-    const contactoOk =
-      email.value.trim() !== "" || telefone.value.trim() !== "";
-
-    // o botão ativa qd os 3 campos obrigatorios forem preenchidos
-    btn.disabled = !(nomeOk && empresaOk && contactoOk);
-  };
-
-  // sempre que houver input nos campos, chama a função validar para verificar se o botão Guardar deve ser ativado ou desativado
-  nome.addEventListener("input", validar);
-  email.addEventListener("input", validar);
-  telefone.addEventListener("input", validar);
-  empresa.addEventListener("input", validar);
-
-  validar();
+    nome.addEventListener("input", validar);
+    email.addEventListener("input", validar);
+    telefone.addEventListener("input", validar);
+    empresa.addEventListener("input", validar);
+    validar();
 }
 
-// função que ativa/desativa o botão Guardar na página ao editar cliente, dependendo se os campos obrigatórios estão preenchidos e se houve alterações nos campos
 function ativarValidacaoEdicaoCliente(clienteOriginal) {
+    const nome = document.getElementById("clienteNome");
+    const email = document.getElementById("clienteEmail");
+    const telefone = document.getElementById("clienteTelefone");
+    const empresa = document.getElementById("clienteEmpresa");
+    const btn = document.getElementById("btnGuardarClienteEdicao");
 
-  // vai buscar os inputs dos campos nome, email, telefone, empresa  
-  const nome = document.getElementById("clienteNome");
-  const email = document.getElementById("clienteEmail");
-  const telefone = document.getElementById("clienteTelefone");
-  const empresa = document.getElementById("clienteEmpresa");
-  // vai buscar o input do botão Guardar para controlar o seu estado dinamicamente
-  const btn = document.getElementById("btnGuardarClienteEdicao");
+    if (!nome || !btn) return;
 
-  if (!nome || !email || !telefone || !empresa || !btn) return;
+    const validar = () => {
+        const nomeVal = nome.value.trim();
+        const emailVal = email.value.trim();
+        const telefoneVal = telefone.value.trim();
+        const empresaVal = empresa.value.trim();
 
-  const validar = () => {
+        const preenchido = nomeVal !== "" && empresaVal !== "" && (emailVal !== "" || telefoneVal !== "");
+        const mudou = nomeVal !== clienteOriginal.nome || emailVal !== clienteOriginal.email || 
+                      telefoneVal !== clienteOriginal.telefone || empresaVal !== clienteOriginal.empresa;
 
-    const nomeVal = nome.value.trim();
-    const emailVal = email.value.trim();
-    const telefoneVal = telefone.value.trim();
-    const empresaVal = empresa.value.trim();
+        btn.disabled = !(preenchido && mudou);
+    };
 
-    const preenchido = nomeVal !== "" && empresaVal !== "" && (emailVal !== "" || telefoneVal !== "");
-
-    const mudou = nomeVal !== clienteOriginal.nome || emailVal !== clienteOriginal.email || telefoneVal !== clienteOriginal.telefone || empresaVal !== clienteOriginal.empresa;
-
-    btn.disabled = !(preenchido && mudou);
-  };
-
-  nome.addEventListener("input", validar);
-  email.addEventListener("input", validar);
-  telefone.addEventListener("input", validar);
-  empresa.addEventListener("input", validar);
-
-  validar();
+    nome.addEventListener("input", validar);
+    email.addEventListener("input", validar);
+    telefone.addEventListener("input", validar);
+    empresa.addEventListener("input", validar);
+    validar();
 }
-
-// Manter as funções de ativarValidacaoNovoCliente e ativarValidacaoEdicaoCliente aqui em baixo...
-// (Elas permanecem exatamente como as tinhas, pois funcionam bem)
-
-document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById("listaClientes")) carregarClientes();
-    if (document.getElementById("detalhesContent")) mostrarDetalhesCliente();
-});
-
-

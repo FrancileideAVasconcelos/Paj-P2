@@ -22,20 +22,29 @@
     <main>
         <section>
 
-            <div class="login-container">
-                <h2>Login</h2>
-                <form id="loginForm">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
-                    <br>
-                    <label for="password">Password: </label>
-                    <input type="password" id="password" name="password" required style="margin-left: px;">
-                    <br><br>
-                    <button type="submit">Login</button>
+            <div class="login-container" style="max-width: 400px;"> <h2>Login</h2>
+    
+                <form id="loginForm" class="custom-form">
+                    
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn" type="submit" style="width: 100%;">Login</button>
+                    </div>
+
+                    <div class="register-link" style="margin-top: 15px; text-align: center; font-size: 14px;">
+                        <p>Não tem conta? <a href="register.html" style="color: #0056b3; font-weight: 600; text-decoration: none;">Registar</a></p>
+                    </div>
+                    
                 </form>
-                <div class="register-link" style="margin-top: 15px; text-align: center;">
-                    <p>Não tem conta? <a href="register.html">Registar</a></p>
-                </div>
             </div>
         </section>       
 

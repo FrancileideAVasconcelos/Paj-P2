@@ -7,8 +7,6 @@
 
 body {
     align-items:center;
-    min-height: 100vh;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     justify-content: center;
 
 }
@@ -26,7 +24,7 @@ h2 {
 
 .login-container {
     background: rgb(255, 255, 255);
-    padding: 40px;
+    padding: 20px;
     border-radius: 10px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     width: 100%;
@@ -90,4 +88,68 @@ button:hover {
 
 button:active {
     transform:perspective(1px) scale(0.98);
+}
+
+/* --- Estilos para o Formulário de Registo/Login --- */
+
+.custom-form {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+/* Coloca inputs lado a lado (ex: Primeiro e Último Nome) */
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* Faz com que os itens na form-row dividam o espaço igualmente */
+}
+
+.form-group label {
+    margin-bottom: 5px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group input {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box; /* Garante que o padding não quebra a largura */
+}
+
+.form-group input:focus {
+    border-color: #0056b3; /* Cor azul do teu tema quando clicas no input */
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 86, 179, 0.3);
+}
+
+/* Zona dos botões */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.form-actions .btn {
+    flex: 1; /* Faz os botões ficarem do mesmo tamanho */
+    padding: 10px;
+}
+
+/* Um estilo opcional para o botão de voltar não ter tanto destaque visual como o de registar */
+.btn-secondary {
+    background-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
 }

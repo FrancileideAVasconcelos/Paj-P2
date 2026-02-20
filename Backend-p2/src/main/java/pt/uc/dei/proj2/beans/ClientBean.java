@@ -62,17 +62,35 @@ public class ClientBean implements Serializable {
         return false;
     }
 
-    public List<ClientPojo> listClients(String username) {
-        UserPojo user = storageBean.findUser(username);
-        return (user != null) ? user.getMeusClientes() : new ArrayList<>();
+    // Adiciona este novo método logo abaixo do existeClienteGlobal
+    public boolean existeClienteGlobalParaEdicao(int idAtual, String nome, String empresa) {
+        List<UserPojo> todosUsers = storageBean.getUsers();
+        for (UserPojo u : todosUsers) {
+            for (ClientPojo c : u.getMeusClientes()) {
+                // Se encontrar o mesmo nome e empresa...
+                if (c.getNome().equalsIgnoreCase(nome) && c.getEmpresa().equalsIgnoreCase(empresa)) {
+                    // ...verifica se é o próprio cliente. Se o ID for diferente, é um duplicado real!
+                    if (c.getId() != idAtual) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
+    // Substitui o teu método editarCliente por este:
     public void editarCliente(int id, ClientDto dto) throws Exception {
-        // 1. Verifica se já existe OUTRO cliente com este nome e empresa
-        if (existeClienteGlobal(dto.getNome(),dto.getEmpresa())){
+        // Agora usamos o novo método que ignora o próprio cliente
+        if (existeClienteGlobalParaEdicao(id, dto.getNome(), dto.getEmpresa())){
             throw new Exception("Este cliente já está registado nesta empresa.");
         }
         storageBean.updateClientData(id, dto);
+    }
+
+    public List<ClientPojo> listClients(String username) {
+        UserPojo user = storageBean.findUser(username);
+        return (user != null) ? user.getMeusClientes() : new ArrayList<>();
     }
 
     public boolean deletClient(int id) {

@@ -16,8 +16,8 @@ import java.util.List;
 
 @ApplicationScoped
 public class StorageBean implements Serializable {
-    private final String filename = "C:\\Users\\House Vasconcelos\\Documents\\UC\\JAVA Avançado\\P2\\Paj-P2\\Backend-p2\\storage.json";
-    private Root root; // Objeto que contém a lista "users" [cite: 241]
+    private final String filename = System.getProperty("user.home") + File.separator + "storage.json";
+    private Root root; // Objeto que contém a lista "users"
 
     //Para que o ficheiro tenha o formato {"users": [...]}, criamos essa classe interna
     public static class Root {
@@ -71,10 +71,11 @@ public class StorageBean implements Serializable {
 
     public UserPojo findUser(String username) {
         return root.users.stream()
-                .filter(u -> u.getUsername().equals(username))
+                .filter(u -> u.getUsername().equalsIgnoreCase(username))
                 .findFirst()
                 .orElse(null);
     }
+
 
     public void addUser(UserPojo u) {
         root.users.add(u);
@@ -92,7 +93,10 @@ public class StorageBean implements Serializable {
         u.setEmail(newData.getEmail());
         u.setTelefone(newData.getTelefone());
         u.setFotoUrl(newData.getFotoUrl());
-        u.setPassword(newData.getPassword()); // O enunciado permite editar a pass
+
+        if (newData.getPassword() != null && !newData.getPassword().trim().isEmpty()) {
+            u.setPassword(newData.getPassword());
+        }
         save(); // Grava no JSON único [cite: 237]
     }
 
@@ -101,10 +105,13 @@ public class StorageBean implements Serializable {
 
     public void addCliente(ClientPojo cliente, String username) {
         UserPojo user = findUser(username);
-
         if (user != null) {
-            user.getMeusClientes().add(cliente); // Adiciona na lista aninhada
-            save(); // Guarda a estrutura completa de volta no ficheiro
+            user.getMeusClientes().add(cliente);
+            this.save();
+            System.out.println("Cliente guardado para o user: " + username);
+        } else {
+            // Log para ver no IntelliJ porque falhou
+            System.out.println("ERRO: Utilizador '" + username + "' não encontrado no storage!");
         }
     }
 

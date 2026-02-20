@@ -5,10 +5,19 @@
 }
 
 #listaClientes li {
+  list-style: none;
   background-color: #f9f9f9;
   margin-bottom: 10px;
   border: none;
   border-radius: 5px;
+}
+
+
+.barra-clientes {
+  width: 98%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .icon {
@@ -27,10 +36,12 @@
     margin-right: 50%;
     border-radius: 30px;
     content: normal;
+    list-style: none;
+    margin-bottom: 20px;
 }
 
 .cliente-item .cliente-item-btn {
-    width: 100%;
+    width: 150%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -44,7 +55,7 @@
 }
 
 .cliente-item .cliente-item-btn:hover {
-    background-color: #e09729;
+    background-color: #0e5cd1;
 }
 
 

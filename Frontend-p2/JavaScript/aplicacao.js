@@ -36,7 +36,7 @@ function loadHeader(page) {
         `;
     } else {
 
-        const firstName = localStorage.getItem("userFirstName") || "Utilizador";
+        const firstName = sessionStorage.getItem("userFirstName") || "Utilizador";
         headerDiv.innerHTML = `
         
             <header class="header-app">
@@ -47,6 +47,7 @@ function loadHeader(page) {
                     </div>
                 
                     <div class="header-right">
+                        <button class="btn" onclick="verPerfil()"><i class="fa-solid fa-circle-user"></i>Meu Perfil</button>
                         <button class="btn" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i>Logout</button>
                     </div>
                 </div>
@@ -59,16 +60,36 @@ function loadHeader(page) {
     }
 }
 
+function loadAside(){
+    const asideDiv = document.getElementById("aside");
+
+    asideDiv.innerHTML = `
+        <aside id="sidebar">
+            <button onclick="loadLeads()">Leads</button>
+            <br>
+            <button onclick="loadClientes()">Clientes</button>
+            <br>
+            <button onclick="loadProjetos()">Projetos</button>
+            <br>
+            <button onclick="loadTarefas()">Tarefas</button>
+        </aside>
+    `
+}
+
 function loadFooter() {
     const footerDiv = document.getElementById("footer");
-
-    footerDiv.innerHTML = new Date().getFullYear() + ` © all right reserved`
-    footerDiv.style.textAlign = "left";
+    
+    // Adicionamos um parágrafo limpo e uma mensagem mais profissional
+    footerDiv.innerHTML = `<p>${new Date().getFullYear()} © Customer Relationship Management - Todos os direitos reservados.</p>`;
 }
 
 // Funções para carregar as Leads
 
 function loadLeads() {
+
+    if (window.location.hash !== "#leads") {
+        window.location.hash = "#leads";
+    }
     content.innerHTML = `
     <h2>Leads</h2>
     <br>
@@ -122,97 +143,63 @@ function loadNovoLead() {
 // Funções para carregar os Clientes
 
 function loadClientes() {
+
+    // Muda a URL lá em cima (ex: dashboard.html#clientes) para ser partilhável
+    if (window.location.hash !== "#clientes") {
+        window.location.hash = "#clientes"; 
+    }
+
     content.innerHTML = `
-    <h2>Clientes</h2>
-    <br>
+    <div class="barra-clientes">
+        <h2>Clientes</h2>
+        <button class="btn" type="button"onclick="formNovoCliente()"><i class="fa-solid fa-user-plus"></i>Novo Cliente</button>
+    </div>
     <!-- lista não ordenada de clientes -->
     <ul id="listaClientes"></ul> 
     <br>
-    <button class="btn" type="button"onclick="loadNovoCliente()"><img src="/imagens/adicionar.jpg" alt="icon" class="icon">Adicionar Cliente</button>
     `;
     
-    listarClientes();
-}
-
-function loadNovoCliente() {
-  content.innerHTML = `
-    <h2>Novo Cliente</h2>
-
-    <!-- required indica que o campo é obrigatório (em Nome e Empresa) -->
-    <label>Nome</label>
-    <input id="clienteNome" type="text" required>
-    <br><br>
-
-    <label>Email</label>
-    <input id="clienteEmail" type="email">
-    <br><br>
-
-    <label>Telefone</label>
-    <input id="clienteTelefone" type="text">
-    <br><br>
-
-    <label>Empresa</label>
-    <input id="clienteEmpresa" type="text" required>
-    <br><br>
-
-    <!-- O botão Guardar só é ativado quando os campos obrigatórios estão preenchidos, por defeito está disabled -->
-    <button id="btnGuardarCliente" class="btn" disabled type="button" onclick="guardarCliente()"><img src="/imagens/guardar.jpg" alt="icon" class="icon">Guardar</button>
-
-    <button class="btn" type="button" onclick="loadClientes()"><img src="/imagens/remover.jpg" alt="icon" class="icon">Cancelar</button>
-  `;
-
-  ativarValidacaoNovoCliente();
-
+    carregarClientes();
 }
 
 // Funções de login e logout
 
 async function login(event) {
-    // Impede o recarregamento da página ao submeter o formulário
     if(event) event.preventDefault(); 
 
     const usernameInput = document.getElementById("username").value;
     const passwordInput = document.getElementById("password").value;
-
     const url = "http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/users/login";
 
-    const dados = {
-        username: usernameInput,
-        password: passwordInput
-    };
+    const dados = { username: usernameInput, password: passwordInput };
 
     try {
         const resposta = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dados)
         });
 
         if (resposta.ok) {
-            localStorage.setItem("currentUser", usernameInput);
-            sessionStorage.setItem("currentPass", passwordInput); 
-
-            // NOVO: Pedir os detalhes do utilizador para obter o Primeiro Nome
-            const profileUrl = `http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/users/${usernameInput}`;
+            // CORREÇÃO: Usar 'username' para ser compatível com o teu clientes.js
+            sessionStorage.setItem("username", usernameInput);
             
-            // Criamos a variável resProfile aqui
+            // Opcional: manter o currentUser se tiveres outras partes a usá-lo
+            localStorage.setItem("currentUser", usernameInput);
+
+            const profileUrl = `http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/users/${usernameInput}`;
             const resProfile = await fetch(profileUrl);
             const userData = await resProfile.json();
 
-            // Guardar o primeiro nome (atenção à escrita: use userFirstName)
-            localStorage.setItem("userFirstName", userData.primeiroNome);
+            sessionStorage.setItem("userFirstName", userData.primeiroNome);
             
-            console.log("Login e perfil carregados com sucesso.");
             window.location.href = "dashboard.html";
         } else {
-            // O servidor retornou 401 [cite: 115]
-            alert("Credenciais inválidas. Tente novamente.");
+            alert("Credenciais inválidas.");
         }
     } catch (erro) {
-        console.error("Erro ao ligar ao servidor:", erro);
-        alert("Não foi possível ligar ao servidor de dados.");
+        console.error("Erro:", erro);
+        alert("Erro na ligação ao servidor.");
     }
 }
 
@@ -256,9 +243,129 @@ async function registar(event) {
     }
 }
 
+// ==========================================
+// FUNÇÕES DO PERFIL DO UTILIZADOR
+// ==========================================
+
+async function verPerfil() {
+    if (window.location.hash !== "#perfil") {
+        window.location.hash = "#perfil";
+    }
+
+    const username = sessionStorage.getItem("username");
+    if (!username) return;
+
+    try {
+        const response = await fetch(`http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/users/${username}`);
+
+        if (response.ok) {
+            const user = await response.json();
+            const main = document.getElementById("content");
+
+            main.innerHTML = `
+                <div class="perfil-container" style="max-width: 600px; margin: 0 auto; text-align: left; background: #f9f9f9; padding: 20px; border-radius: 8px;">
+                    <h2 style="text-align: center;">Meu Perfil</h2>
+                    
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <img src="${user.fotoUrl || '/imagens/favicon1.png'}" alt="Foto" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #ccc;">
+                    </div>
+                    
+                    <label>Username</label>
+                    <input type="text" value="${user.username}" disabled title="O username não pode ser alterado"><br><br>
+
+                    <label>Primeiro Nome</label>
+                    <input id="perfilPrimeiroNome" type="text" value="${user.primeiroNome || ''}"><br><br>
+
+                    <label>Último Nome</label>
+                    <input id="perfilUltimoNome" type="text" value="${user.ultimoNome || ''}"><br><br>
+
+                    <label>Email</label>
+                    <input id="perfilEmail" type="email" value="${user.email || ''}"><br><br>
+
+                    <label>Telefone</label>
+                    <input id="perfilTelefone" type="text" value="${user.telefone || ''}"><br><br>
+
+                    <label>URL da Foto de Perfil</label>
+                    <input id="perfilFotoUrl" type="text" value="${user.fotoUrl || ''}"><br><br>
+
+                    <hr style="margin: 20px 0;">
+
+                    <label><strong>Password Atual (Obrigatória para guardar)</strong></label>
+                    <input id="perfilPassAtual" type="password" required style="border: 2px solid #0056b3;"><br><br>
+
+                    <label>Nova Password (Opcional - deixa em branco para manter a mesma)</label>
+                    <input id="perfilPassNova" type="password"><br><br>
+
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="btn" onclick="guardarPerfil()"><i class="fa-solid fa-floppy-disk"></i> Guardar Alterações</button>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error("Erro na ligação ao servidor:", error);
+    }
+}
+
+async function guardarPerfil() {
+    const username = sessionStorage.getItem("username");
+    const passAtual = document.getElementById("perfilPassAtual").value;
+
+    // Validação de segurança no Frontend
+    if (!passAtual) {
+        alert("Por favor, insere a tua Password Atual para confirmar as alterações.");
+        return;
+    }
+
+    const dadosAtualizados = {
+        username: username,
+        primeiroNome: document.getElementById("perfilPrimeiroNome").value.trim(),
+        ultimoNome: document.getElementById("perfilUltimoNome").value.trim(),
+        email: document.getElementById("perfilEmail").value.trim(),
+        telefone: document.getElementById("perfilTelefone").value.trim(),
+        fotoUrl: document.getElementById("perfilFotoUrl").value.trim(),
+        password: document.getElementById("perfilPassNova").value // Vai vazio se o user não quiser mudar
+    };
+
+    try {
+        // Atenção: O teu Backend está a usar POST para atualizar o perfil
+        const response = await fetch(`http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/users/${username}`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'username': username,      // Header exigido pelo teu UserService
+                'password': passAtual      // Header exigido pelo teu UserService
+            },
+            body: JSON.stringify(dadosAtualizados)
+        });
+
+        if (response.ok) {
+            alert("Perfil atualizado com sucesso!");
+            
+            // Atualiza a memória do browser e redesenha o cabeçalho com o novo nome
+            sessionStorage.setItem("userFirstName", dadosAtualizados.primeiroNome);
+            loadHeader(); 
+
+            // Limpa o campo da password por segurança
+            document.getElementById("perfilPassAtual").value = "";
+            document.getElementById("perfilPassNova").value = "";
+            
+        } else {
+            alert("Erro: " + await response.text());
+        }
+    } catch (error) {
+        console.error("Erro:", error);
+    }
+}
+
 
 // as funções seguintes serão terminadas em projetos futuros
 function loadProjetos() {
+
+    if (window.location.hash !== "#projetos") {
+        window.location.hash = "#projetos";
+    }
+
     content.innerHTML = `
     <h2>Projetos</h2>
     <p>Funcionalidade futura</p>
@@ -266,6 +373,11 @@ function loadProjetos() {
 }
 
 function loadTarefas() {
+
+    if (window.location.hash !== "#tarefas") {
+        window.location.hash = "#tarefas";
+    }
+
     content.innerHTML = `
     <h2>Tarefas</h2>
     <p>Funcionalidade futura</p>
@@ -276,33 +388,51 @@ function loadDashboardHome() {
     content.innerHTML = `
         <section class="dashboard-home">
             <h2>Bem-vindo ao CRM</h2>
-            <p>Seleciona uma opção no menu lateral para começar.</p>
         </section>
     `;
 }
 
 // Função para inicializar a aplicação
 
-window.onload = function() {
-    // 1. Verifica se existe um utilizador logado
-    const user = localStorage.getItem("currentUser");
-    
-    // 2. Obtém o nome do ficheiro atual (ex: registo.html ou login.html)
-    const path = window.location.pathname;
+// Função que decide o que desenhar no ecrã com base na URL
+function roteador() {
+    const hash = window.location.hash;
 
-    // 3. Se NÃO estiver logado e NÃO estiver no login nem no registo, manda para o login
-    if (!user && !path.includes("login.html") && !path.includes("register.html")) {
-        window.location.href = "login.html";
-        return; // Interrompe a execução aqui
+    if (hash === "#clientes") {
+        carregarClientes(); // Chama diretamente a função do clientes.js
+    } else if (hash === "#perfil") {
+        verPerfil();
+    } else if (hash === "#leads") {
+        loadLeads();
+    } else if (hash === "#projetos") {
+        loadProjetos();
+    } else if (hash === "#tarefas") {
+        loadTarefas();
+    } else {
+        loadDashboardHome(); // Se não houver hash ou for desconhecido, mostra o Bem-vindo
+    }
+}
+
+// Inicializador
+window.onload = function() {
+    const user = localStorage.getItem("currentUser"); //
+    const path = window.location.pathname; //
+
+    if (!user && !path.includes("login.html") && !path.includes("register.html")) { //
+        window.location.href = "login.html"; //
+        return; 
     }
 
-    // 4. Se passar a verificação, carrega os elementos visuais
-    loadHeader();
-    loadFooter();
+    loadHeader(); //
+    loadFooter(); //
 
-    if (path.includes("dashboard")) {
-        loadDashboardHome();
+    if (path.includes("dashboard")) { //
+        roteador(); // Lê a URL e decide para onde ir!
     }
 };
+
+// MAGIA: Faz os botões de "Recuar" e "Avançar" do próprio navegador funcionarem!
+window.addEventListener("hashchange", roteador);
+
 
 

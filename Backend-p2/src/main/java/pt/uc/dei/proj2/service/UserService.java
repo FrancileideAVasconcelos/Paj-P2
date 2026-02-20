@@ -61,6 +61,8 @@ public class UserService {
 
     @POST
     @Path("/{username}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response updateProfile(
             @PathParam("username") String userAAlterar, // O nome que vem no URL
             @HeaderParam("username") String userAuth,   // O nome que vem no Header

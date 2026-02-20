@@ -22,29 +22,54 @@
     <main>
         <section>
 
-            <div class="login-container">
-                <h2>Registo</h2>
-                <form id="registerForm">
-                    <label>Primeiro nome:</label>
-                    <input type="text" id="regPrimeiroNome" required>
-                    <br>
-                    <label>Útimo nome: </label>
-                    <input type="text" id="regUltimoNome" required>
-                    <label>Telefone: </label>
-                    <input type="text" id="regTelefone" required>
-                    <label>Email: </label>
-                    <input type="text" id="regEmail" required>
-                    <label>Foto: </label>
-                    <input type="text" id="regFotoUrl" required>
-                    <label>Username: </label>
-                    <input type="text" id="regUsername" required>
-                    <label>Password </label>
-                    <input type="text" id="regPassword" required>
+            <div class="login-container" style="max-width: 500px;"> <h2>Registo</h2>
+    
+                <form id="registerForm" class="custom-form">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regPrimeiroNome">Primeiro nome:</label>
+                            <input type="text" id="regPrimeiroNome" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regUltimoNome">Último nome:</label>
+                            <input type="text" id="regUltimoNome" required>
+                        </div>
+                    </div>
 
+                    <div class="form-group">
+                        <label for="regFotoUrl">Foto URL:</label>
+                        <input type="url" id="regFotoUrl" required>
+                    </div>
 
-                    <br><br>
-                    <button type="submit">Registar</button>
-                    <button type="button" onclick="window.location.href='login.html'" style="background-color: #667;">Voltar</button>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regEmail">Email:</label>
+                            <input type="email" id="regEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regTelefone">Telefone:</label>
+                            <input type="text" id="regTelefone" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regUsername">Username:</label>
+                        <input type="text" id="regUsername" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regPassword">Password:</label>
+                        <input type="password" id="regPassword" required>
+                    </div>
+
+                    
+
+                    <div class="form-actions">
+                        <button class="btn" type="submit">Registar</button>
+                        <button class="btn btn-secondary" type="button" onclick="window.location.href='login.html'">Voltar</button>
+                    </div>
+
                 </form>
             </div>
         </section>       
