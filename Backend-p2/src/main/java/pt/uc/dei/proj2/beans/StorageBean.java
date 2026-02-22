@@ -97,7 +97,7 @@ public class StorageBean implements Serializable {
         if (newData.getPassword() != null && !newData.getPassword().trim().isEmpty()) {
             u.setPassword(newData.getPassword());
         }
-        save(); // Grava no JSON único [cite: 237]
+        save();
     }
 
     // ---------------- Clientes -----------------
@@ -110,7 +110,6 @@ public class StorageBean implements Serializable {
             this.save();
             System.out.println("Cliente guardado para o user: " + username);
         } else {
-            // Log para ver no IntelliJ porque falhou
             System.out.println("ERRO: Utilizador '" + username + "' não encontrado no storage!");
         }
     }

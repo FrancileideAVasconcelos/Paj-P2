@@ -46,7 +46,7 @@ public class LeadBean implements Serializable {
         novaLead.setId(nextId);
         novaLead.setTitulo(leadDto.getTitulo());
         novaLead.setDescricao(leadDto.getDescricao());
-        novaLead.setEstado(0);
+        novaLead.setEstado(leadDto.getEstado());
 
         storageBean.addLeads(novaLead,username);
 
@@ -67,25 +67,20 @@ public class LeadBean implements Serializable {
 
     // Editar Lead
 
-    public LeadPojo updateLead(String username, int id, String title, String description, int state) {
+    public LeadPojo updateLead(String username, int id, LeadDto dto) {
 
         UserPojo user = storageBean.findUser(username);
-
         if (user == null) return null;
 
         for (LeadPojo l : user.getMeusLeads()) {
             if (l.getId() == id) {
-
-                l.setTitulo(title);
-                l.setDescricao(description);
-                l.setEstado(state);
-
-                storageBean.addLeads(l,username);
-
+                l.setTitulo(dto.getTitulo());
+                l.setDescricao(dto.getDescricao());
+                l.setEstado(dto.getEstado()); // usa o estado vindo do DTO
+                storageBean.save();           // persiste
                 return l;
             }
         }
-
         return null;
     }
 
@@ -94,10 +89,15 @@ public class LeadBean implements Serializable {
     public boolean deleteLead(String username, int id) {
 
         UserPojo user = storageBean.findUser(username);
-
         if (user == null) return false;
 
-        return user.getMeusLeads().removeIf(l -> l.getId() == id);
+        boolean removed = user.getMeusLeads().removeIf(l -> l.getId() == id);
+
+        if (removed) {
+            storageBean.save();
+        }
+
+        return removed;
     }
 
 

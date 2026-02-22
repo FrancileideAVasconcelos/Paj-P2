@@ -5,27 +5,40 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import pt.uc.dei.proj2.beans.LeadBean;
-import pt.uc.dei.proj2.beans.StorageBean;
-import pt.uc.dei.proj2.beans.UserBean;
-import pt.uc.dei.proj2.dto.ClientDto;
 import pt.uc.dei.proj2.dto.LeadDto;
-import pt.uc.dei.proj2.pojo.ClientPojo;
 import pt.uc.dei.proj2.pojo.LeadPojo;
 
 import java.util.List;
 
-@Path("/users/{username}/leads")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-
+@Path("/leads")
 public class LeadService {
 
     @Inject
-    LeadBean leadBean;
+    private LeadBean leadBean;
 
-    // =============================
-    // LISTAR
-    // =============================
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addLead(@HeaderParam("username") String username, LeadDto leadDto) {
+
+        if (username == null || username.isEmpty()) {
+            return Response.status(401).entity("Utilizador não autenticado").build();
+        }
+
+        if (leadDto == null ||
+                leadDto.getTitulo() == null || leadDto.getTitulo().trim().isEmpty() ||
+                leadDto.getDescricao() == null || leadDto.getDescricao().trim().isEmpty()) {
+            return Response.status(400).entity("Dados incompletos: Título e Descrição são obrigatórios").build();
+        }
+
+        try {
+            LeadPojo novo = leadBean.createLead(username, leadDto);
+            return Response.status(201).entity(novo).build();
+        } catch (Exception e) {
+            return Response.status(409).entity(e.getMessage()).build();
+        }
+    }
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLeads(@HeaderParam("username") String username) {
@@ -34,91 +47,51 @@ public class LeadService {
             return Response.status(401).entity("Acesso negado").build();
         }
 
-        // Retorna a lista de leads do utilizador logado
         List<LeadPojo> leads = leadBean.getLeads(username);
         return Response.status(200).entity(leads).build();
     }
 
-    // =============================
-    // CRIAR
-    // =============================
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response addLead(@HeaderParam("username") String username, LeadDto leadDto) {
-
-        // 1. Verificação de Autenticação (como fazes no login/register)
-        if (username == null || username.isEmpty()) {
-            return Response.status(401).entity("Utilizador não autenticado").build();
-        }
-
-        // Validação básica de campos obrigatórios do DTO
-        if (leadDto.getTitulo() == null || leadDto.getDescricao() == null) {
-            return Response.status(400).entity("Dados incompletos: Título e Descrição são obrigatórios").build();
-        }
-
-        try {
-            // 2. Tenta registar (o Bean vai validar duplicados Nome+Empresa e gerar o ID)
-            LeadPojo newLead = leadBean.createLead(username, leadDto);
-
-            // Retorna 201 Created com o objeto criado
-            return Response.status(201).entity(newLead).build();
-
-        } catch (Exception e) {
-            // 3. Se o Bean lançar exceção (ex: cliente já existe), retorna 409 Conflict
-            return Response.status(409).entity(e.getMessage()).build();
-        }
-    }
-
-    // =============================
-    // EDITAR
-    // =============================
-   /* @PUT
+    @PUT
     @Path("/{id}")
-    public Response updateLead(@PathParam("username") String username,
-                               @PathParam("id") int id,
-                               @HeaderParam("password") String password,
-                               LeadPojo dto) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response editarLead(@PathParam("id") int id,
+                               @HeaderParam("username") String username,
+                               LeadDto dto) {
 
-        if (!userBean.login(username, password)) {
-            return Response.status(401).build();
+        if (username == null || username.isEmpty()) {
+            return Response.status(401).entity("Não autorizado").build();
         }
 
-        LeadPojo leadPojo = userBean.updateLead(
-                username,
-                id,
-                dto.getTitulo(),
-                dto.getDescricao(),
-                dto.getEstado()
-        );
-
-        if (leadPojo == null) {
-            return Response.status(404).build();
+        if (dto == null ||
+                dto.getTitulo() == null || dto.getTitulo().trim().isEmpty() ||
+                dto.getDescricao() == null || dto.getDescricao().trim().isEmpty()) {
+            return Response.status(400).entity("Erro: Título e Descrição são obrigatórios para a edição").build();
         }
 
-        return Response.ok(leadPojo).build();
+        LeadPojo updated = leadBean.updateLead(username, id, dto);
+
+        if (updated == null) {
+            return Response.status(404).entity("Lead não encontrada com o ID: " + id).build();
+        }
+
+        return Response.status(200).entity("Lead atualizada com sucesso").build();
     }
 
-    // =============================
-    // APAGAR
-    // =============================
     @DELETE
     @Path("/{id}")
-    public Response deleteLead(@PathParam("username") String username,
-                               @PathParam("id") int id,
-                               @HeaderParam("password") String password) {
+    public Response eliminarLead(@PathParam("id") int id,
+                                 @HeaderParam("username") String username) {
 
-        if (!userBean.login(username, password)) {
-            return Response.status(401).build();
+        if (username == null || username.isEmpty()) {
+            return Response.status(401).entity("Não autorizado").build();
         }
 
-        boolean removed = userBean.deleteLead(username, id);
+        boolean success = leadBean.deleteLead(username, id);
 
-        if (!removed) {
-            return Response.status(404).build();
+        if (success) {
+            return Response.status(200).entity("Lead removida com sucesso").build();
+        } else {
+            return Response.status(404).entity("Lead não encontrada com o ID: " + id).build();
         }
-
-        return Response.ok().build();
-    }*/
-
+    }
 }
