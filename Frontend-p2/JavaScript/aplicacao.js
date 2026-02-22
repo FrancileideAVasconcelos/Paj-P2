@@ -183,6 +183,7 @@ async function login(event) {
         if (resposta.ok) {
             // CORREÇÃO: Usar 'username' para ser compatível com o teu clientes.js
             sessionStorage.setItem("username", usernameInput);
+            sessionStorage.setItem("password", passwordInput);
             
             // Opcional: manter o currentUser se tiveres outras partes a usá-lo
             localStorage.setItem("currentUser", usernameInput);
@@ -203,8 +204,16 @@ async function login(event) {
     }
 }
 
-function logout() {
-    // O enunciado exige apagar TODOS os dados 
+async function logout() {
+    try {
+        await fetch("http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/users/logout", {
+            method: 'POST'
+        });
+    } catch (e) {
+        console.error("Erro ao fechar sessão no servidor.");
+    }
+    
+    //apaga TODOS os dados 
     localStorage.clear();
     sessionStorage.clear();
     console.log("Sessão terminada.");
@@ -222,7 +231,7 @@ async function registar(event) {
         username: document.getElementById("regUsername").value,
         password: document.getElementById("regPassword").value,
         fotoUrl: document.getElementById("regFotoUrl").value,
-        telefone: "" // Campo opcional conforme o teu UserPojo
+        telefone: document.getElementById("regTelefone").value // Campo opcional conforme o teu UserPojo
     };
 
     try {
@@ -267,8 +276,7 @@ async function verPerfil() {
                     <h2 style="text-align: center;">Meu Perfil</h2>
                     
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <img src="${user.fotoUrl || '/imagens/favicon1.png'}" alt="Foto" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #ccc;">
-                    </div>
+                        <img id="imgPerfilVisivel" src="${user.fotoUrl || '/imagens/favicon1.png'}" alt="Foto" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid #ccc;">                    </div>
                     
                     <label>Username</label>
                     <input type="text" value="${user.username}" disabled title="O username não pode ser alterado"><br><br>
@@ -342,13 +350,13 @@ async function guardarPerfil() {
         if (response.ok) {
             alert("Perfil atualizado com sucesso!");
             
-            // Atualiza a memória do browser e redesenha o cabeçalho com o novo nome
+            const novaUrl = document.getElementById("perfilFotoUrl").value.trim();
+            // Atualiza o "src" da imagem imediatamente! (usa o ícone padrão se o URL estiver vazio)
+            document.getElementById("imgPerfilVisivel").src = novaUrl || '/imagens/favicon1.png';
+
+            // Atualiza a memória e o cabeçalho (que já tinhas)
             sessionStorage.setItem("userFirstName", dadosAtualizados.primeiroNome);
             loadHeader(); 
-
-            // Limpa o campo da password por segurança
-            document.getElementById("perfilPassAtual").value = "";
-            document.getElementById("perfilPassNova").value = "";
             
         } else {
             alert("Erro: " + await response.text());

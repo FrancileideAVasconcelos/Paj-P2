@@ -7,7 +7,7 @@ import pt.uc.dei.proj2.dto.UserDto;
 import pt.uc.dei.proj2.pojo.UserPojo;
 
 import java.io.Serializable;
-import java.util.List;
+
 
 @RequestScoped
 public class UserBean implements Serializable {
@@ -29,10 +29,6 @@ public class UserBean implements Serializable {
         if (existing != null) {
             return false;
         }
-
-        //Gerar o ID único
-        //lista total do storage e chama o método genérico
-        //List<UserPojo> users = storageBean.getUsers();
 
         int nextId = storageBean.generateNextId(storageBean.getUsers(), UserPojo::getId);
 

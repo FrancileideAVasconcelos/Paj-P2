@@ -5,6 +5,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import pt.uc.dei.proj2.beans.ClientBean;
+import pt.uc.dei.proj2.beans.UserBean;
 import pt.uc.dei.proj2.dto.ClientDto;
 import pt.uc.dei.proj2.pojo.ClientPojo;
 import java.util.List;
@@ -15,19 +16,27 @@ public class ClientService {
     @Inject
     private ClientBean clientBean;
 
+    @Inject
+    private UserBean userBean;
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addCliente(@HeaderParam("username") String username, ClientDto clienteDto) {
+    public Response addCliente(@HeaderParam("username") String username,@HeaderParam("password") String password, ClientDto clienteDto) {
 
         // 1. Verificação de Autenticação (como fazes no login/register)
-        if (username == null || username.isEmpty()) {
-            return Response.status(401).entity("Utilizador não autenticado").build();
+        if (username == null || password == null || !userBean.login(username, password)) {
+            return Response.status(401).entity("Acesso negado - Credenciais inválidas").build();
         }
 
-        // Validação básica de campos obrigatórios do DTO
-        if (clienteDto.getNome() == null || clienteDto.getEmpresa() == null) {
-            return Response.status(400).entity("Dados incompletos: Nome e Empresa são obrigatórios").build();
+        // 2. Validação básica de campos (Nome e Empresa obrigatórios + pelo menos UM contacto)
+        boolean semNome = clienteDto.getNome() == null || clienteDto.getNome().trim().isEmpty();
+        boolean semEmpresa = clienteDto.getEmpresa() == null || clienteDto.getEmpresa().trim().isEmpty();
+        boolean semEmail = clienteDto.getEmail() == null || clienteDto.getEmail().trim().isEmpty();
+        boolean semTelefone = clienteDto.getTelefone() == null || clienteDto.getTelefone().trim().isEmpty();
+
+        if (semNome || semEmpresa || (semEmail && semTelefone)) {
+            return Response.status(400).entity("Dados incompletos: Nome, Empresa e pelo menos um contacto (Email ou Telefone) são obrigatórios.").build();
         }
 
         try {
@@ -45,10 +54,10 @@ public class ClientService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getClientes(@HeaderParam("username") String username) {
+    public Response getClientes(@HeaderParam("username") String username, @HeaderParam("password") String password) {
 
-        if (username == null || username.isEmpty()) {
-            return Response.status(401).entity("Acesso negado").build();
+        if (username == null || password == null || !userBean.login(username, password)) {
+            return Response.status(401).entity("Acesso negado - Credenciais inválidas").build();
         }
 
         // Retorna a lista de clientes do utilizador logado
@@ -59,17 +68,23 @@ public class ClientService {
     @PUT
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response editarCliente(@PathParam("id") int id, @HeaderParam("username") String username, ClientDto dto) {
+    public Response editarCliente(@PathParam("id") int id, @HeaderParam("username") String username, @HeaderParam("password") String password, ClientDto dto) {
 
         // Validação de segurança básica
-        if (username == null || username.isEmpty()) {
-            return Response.status(401).entity("Não autorizado").build();
+        if (username == null || username.isEmpty() || !userBean.login(username, password)) {
+            return Response.status(401).entity("Acesso negado - Credenciais inválidas").build();
         }
-        if (dto.getNome() == null || dto.getNome().trim().isEmpty() ||
-                dto.getEmpresa() == null || dto.getEmpresa().trim().isEmpty() ||
-                dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
-            return Response.status(400).entity("Erro: Nome, Empresa e Email são obrigatórios para a edição").build();
+
+        // 2. Validação básica de campos (Nome e Empresa obrigatórios + pelo menos UM contacto)
+        boolean semNome = dto.getNome() == null || dto.getNome().trim().isEmpty();
+        boolean semEmpresa = dto.getEmpresa() == null || dto.getEmpresa().trim().isEmpty();
+        boolean semEmail = dto.getEmail() == null || dto.getEmail().trim().isEmpty();
+        boolean semTelefone = dto.getTelefone() == null || dto.getTelefone().trim().isEmpty();
+
+        if (semNome || semEmpresa || (semEmail && semTelefone)) {
+            return Response.status(400).entity("Dados incompletos: Nome, Empresa e pelo menos um contacto (Email ou Telefone) são obrigatórios.").build();
         }
+
         try {
             clientBean.editarCliente(id, dto);
             return Response.status(200).entity("Cliente atualizado com sucesso").build();
@@ -80,11 +95,11 @@ public class ClientService {
 
     @DELETE
     @Path("/{id}")
-    public Response eliminarCliente(@PathParam("id") int id, @HeaderParam("username") String username) {
+    public Response eliminarCliente(@PathParam("id") int id, @HeaderParam("username") String username, @HeaderParam("password") String password) {
 
         // Verificação de segurança básica
-        if (username == null || username.isEmpty()) {
-            return Response.status(401).entity("Não autorizado").build();
+        if (username == null || username.isEmpty() || !userBean.login(username, password)) {
+            return Response.status(401).entity("Acesso negado - Credenciais inválidas").build();
         }
 
         boolean sucess = clientBean.deletClient(id);
