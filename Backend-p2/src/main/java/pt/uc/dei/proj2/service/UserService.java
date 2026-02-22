@@ -12,7 +12,7 @@ import pt.uc.dei.proj2.pojo.UserPojo;
 public class UserService {
 
     @Inject
-    UserBean userBean;
+    private UserBean userBean;
 
     @POST
     @Path("/login")
@@ -30,6 +30,13 @@ public class UserService {
 
         // Se a autenticação falhar [cite: 115]
         return Response.status(401).entity("Wrong Username or Password!").build();
+    }
+
+    @POST
+    @Path("/logout")
+    public Response logout() {
+        // endpoint e retorna 200 Success .
+        return Response.status(200).build();
     }
 
     @POST

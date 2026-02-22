@@ -7,12 +7,13 @@ let clienteList = [];
 
 async function carregarClientes() {
     const username = sessionStorage.getItem("username");
+    const password = sessionStorage.getItem("password");
     if (!username) return;
 
     try {
         const response = await fetch(API_URL, {
             method: "GET",
-            headers: { "username": username }
+            headers: { "username": username, "password": password }
         });
 
         if (response.ok) {
@@ -95,10 +96,10 @@ function formNovoCliente() {
         <label>Empresa</label> <input id="clienteEmpresa" type="text" required><br><br>
         
         <button id="btnGuardarCliente" class="btn" disabled type="button" onclick="guardarCliente()">
-            <img src="/imagens/guardar.jpg" class="icon">Guardar
+            <i class="fa-solid fa-floppy-disk"></i>Guardar
         </button>
         <button class="btn" type="button" onclick="carregarClientes()">
-            <img src="/imagens/remover.jpg" class="icon">Cancelar
+            <i class="fa-solid fa-xmark"></i>Cancelar
         </button>
     `;
     ativarValidacaoNovoCliente();
@@ -116,10 +117,10 @@ function editarCliente(index) {
         <label>Empresa</label> <input id="clienteEmpresa" type="text" value="${c.empresa}"> <br><br>
         
         <button id="btnGuardarClienteEdicao" class="btn" disabled type="button" onclick="guardarCliente(${index})">
-            <img src="/imagens/guardar.jpg" class="icon">Guardar
+            <i class="fa-solid fa-floppy-disk"></i>Guardar
         </button>
         <button class="btn" onclick="mostrarDetalhesCliente(${index})">
-            <img src="/imagens/remover.jpg" class="icon">Cancelar
+            <i class="fa-solid fa-xmark"></i>Cancelar
         </button>
     `;
     
@@ -142,6 +143,8 @@ async function guardarCliente(index = null) {
 
     const dados = { nome, email, telefone, empresa };
     const username = sessionStorage.getItem("username");
+    const password = sessionStorage.getItem("password");
+
     let response;
 
     try {
@@ -149,7 +152,7 @@ async function guardarCliente(index = null) {
             // POST: Novo Cliente
             response = await fetch(API_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "username": username },
+                headers: { "Content-Type": "application/json", "username": username , "password": password},
                 body: JSON.stringify(dados)
             });
         } else {
@@ -157,7 +160,7 @@ async function guardarCliente(index = null) {
             const idGlobal = clienteList[index].id; 
             response = await fetch(`${API_URL}/${idGlobal}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json", "username": username },
+                headers: { "Content-Type": "application/json", "username": username , "password": password},
                 body: JSON.stringify(dados)
             });
         }
@@ -178,11 +181,14 @@ async function removerCliente(index) {
     
     const idGlobal = clienteList[index].id; 
     const username = sessionStorage.getItem("username");
+    const password = sessionStorage.getItem("password"); 
 
     try {
         const response = await fetch(`${API_URL}/${idGlobal}`, {
             method: "DELETE",
-            headers: { "username": username }
+            headers: { "username": username ,
+                        "password": password
+            }
         });
 
         if (response.ok) {
