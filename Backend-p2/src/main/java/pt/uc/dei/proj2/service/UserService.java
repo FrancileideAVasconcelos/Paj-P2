@@ -42,6 +42,7 @@ public class UserService {
     @POST
     @Path("/register")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response register(UserDto newUser) {
         // O registo deve retornar 201 em caso de sucesso [cite: 139]
         boolean success = userBean.register(newUser);
