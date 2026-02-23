@@ -9,22 +9,35 @@
     
 }
 
-
-.lead-item button {
-    width: 100%;
+.barra-leads {
+    width: 98%;
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+
+.lead-item button {
+   width: 150%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
     padding: 12px 20px;
     border-radius: 999px;
-    background: #050a9e;
+    background: #050a9e;  
     color: white;
     border: none;
     cursor: pointer;
 }
 
+.filtro-label {
+    font-weight: bold;
+    margin-bottom: 50px;
+}
+
 .lead-item button:hover {
-    background-color: #e09729;
+    background-color: #0e5cd1;
 }
 
 .lead-titulo {

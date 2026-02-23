@@ -5,6 +5,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import pt.uc.dei.proj2.beans.LeadBean;
+import pt.uc.dei.proj2.beans.UserBean;
 import pt.uc.dei.proj2.dto.LeadDto;
 import pt.uc.dei.proj2.pojo.LeadPojo;
 
@@ -15,13 +16,15 @@ public class LeadService {
 
     @Inject
     private LeadBean leadBean;
+    @Inject
+    private UserBean userBean;
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addLead(@HeaderParam("username") String username, LeadDto leadDto) {
+    public Response addLead(@HeaderParam("username") String username,@HeaderParam("password") String password, LeadDto leadDto) {
 
-        if (username == null || username.isEmpty()) {
+        if (username == null || password == null || !userBean.login(username,password)) {
             return Response.status(401).entity("Utilizador não autenticado").build();
         }
 
@@ -41,10 +44,10 @@ public class LeadService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getLeads(@HeaderParam("username") String username) {
+    public Response getLeads(@HeaderParam("username") String username, @HeaderParam("password") String password) {
 
-        if (username == null || username.isEmpty()) {
-            return Response.status(401).entity("Acesso negado").build();
+        if (username == null || password == null || !userBean.login(username,password)) {
+            return Response.status(401).entity("Utilizador não autenticado").build();
         }
 
         List<LeadPojo> leads = leadBean.getLeads(username);
@@ -55,11 +58,11 @@ public class LeadService {
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response editarLead(@PathParam("id") int id,
-                               @HeaderParam("username") String username,
+                               @HeaderParam("username") String username, @HeaderParam("password") String password,
                                LeadDto dto) {
 
-        if (username == null || username.isEmpty()) {
-            return Response.status(401).entity("Não autorizado").build();
+        if (username == null || password == null || !userBean.login(username,password)) {
+            return Response.status(401).entity("Utilizador não autenticado").build();
         }
 
         if (dto == null ||
@@ -80,10 +83,10 @@ public class LeadService {
     @DELETE
     @Path("/{id}")
     public Response eliminarLead(@PathParam("id") int id,
-                                 @HeaderParam("username") String username) {
+                                 @HeaderParam("username") String username, @HeaderParam("password") String password) {
 
-        if (username == null || username.isEmpty()) {
-            return Response.status(401).entity("Não autorizado").build();
+        if (username == null || password == null || !userBean.login(username,password)) {
+            return Response.status(401).entity("Utilizador não autenticado").build();
         }
 
         boolean success = leadBean.deleteLead(username, id);

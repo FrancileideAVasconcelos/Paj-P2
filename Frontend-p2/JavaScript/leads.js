@@ -1,313 +1,329 @@
-// ficheiro responsável pela gestão de leads (adicionar, listar por estado, editar e remover) com persistência em localStorage
+const LEADS_API_URL = "http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/leads";
+let leadsList = [];
 
-// const { act } = require("react");
+// Estados (frontend) – index = STATE_ID (como no teu backend atual)
+const statusOptions = ["Novo", "Em análise", "Proposta", "Ganho", "Perdido"];
 
-// objeto lead
-var lead = {titulo : "", descricao : "", estado : ""};
+// ==========================================
+// 1. CARREGAR E LISTAR
+// ==========================================
 
+async function carregarLeads() {
+  const username = sessionStorage.getItem("username");
+  const password = sessionStorage.getItem("password");
+  if (!username) return;
 
-// Array de leads
-let leadsList = new Array();
+  try {
+    const response = await fetch(LEADS_API_URL, {
+      method: "GET",
+      headers: { username, password },
+    });
 
-// opções de estado para as leads
+    if (response.ok) {
+      leadsList = await response.json();
 
-const statusOptions = [ "Novo","Em análise","Proposta","Ganho","Perdido"];
+      // ordenar: por estado e depois por título (podes ajustar)
+      leadsList.sort((a, b) => {
+        const ea = Number(a.estado ?? 0);
+        const eb = Number(b.estado ?? 0);
+        if (ea !== eb) return ea - eb;
+        return (a.titulo || "").localeCompare(b.titulo || "");
+      });
 
-
-// Função para gerar ID único para cada lead de forma incremental
-
-
-// Função para criar uma lead
-function criarLead(titulo, descricao) {
-    return{
-        titulo: titulo,
-        descricao: descricao,
-        estado: statusOptions[0]  // define o status inicial como "Novo"
-
+      listarLeads();
+    } else {
+      alert("Erro ao ir buscar leads: " + (await response.text()));
     }
-
+  } catch (error) {
+    console.error("Erro na ligação ao servidor:", error);
+  }
 }
 
-// Função para adicionar uma lead
+function listarLeads() {
+  const main = document.getElementById("content");
+  if (!main) return;
 
-async function adicionarLead() {
-    const titulo = document.getElementById("leadTitulo").value;
-    const descricao = document.getElementById("leadDescricao").value;
+  let html = `
+    <div class="barra-leads">
+      <h2>Leads</h2>
+      <button class="btn" type="button" onclick="formNovaLead()">
+        <i class="fa-solid fa-plus"></i> Nova Lead
+      </button>
+    </div>
 
-    if (!titulo.trim() || !descricao.trim()) {
-        alert("Por favor, preencha os campos de título e descrição.");
-        return;
+    <label class="filtro-label" for="filtroEstado">Filtrar por estado:</label>
+    <select id="filtroEstado"></select>
+
+    <div id="listaLeads" style="margin-top: 5%;"></div>
+    <br>
+  `;
+
+  main.innerHTML = html;
+
+  preencherFiltroEstados();
+  renderListaLeads(leadsList);
+
+  // listener (porque o HTML é injetado)
+  const filtro = document.getElementById("filtroEstado");
+  filtro.addEventListener("change", () => {
+    const val = filtro.value;
+    if (val === "") {
+      renderListaLeads(leadsList);
+    } else {
+      const estado = Number(val);
+      const filtradas = leadsList.filter((l) => Number(l.estado) === estado);
+      renderListaLeads(filtradas);
     }
-
-    const novaLead = {
-        titulo: titulo,
-        descricao: descricao,
-        estado: 0 // Corresponde ao primeiro estado no teu LeadPojo
-    };
-
-    try {
-        const resposta = await fetch("http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/leads", {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                // Necessário se o teu backend exigir autenticação (R4)
-                'Authorization': 'Basic ' + btoa(localStorage.getItem("currentUser") + ":" + sessionStorage.getItem("currentPass"))
-            },
-            body: JSON.stringify(novaLead)
-        });
-
-        if (resposta.ok) {
-            alert("Lead adicionada com sucesso no servidor!");
-            loadLeads();
-        } else {
-            alert("Erro ao guardar no servidor.");
-        }
-    } catch (erro) {
-        console.error("Erro na ligação:", erro);
-    }
+  });
 }
-
-
-// Função para guardar leads no localStorage
-
-function guardarLeads() {
-    localStorage.setItem("leadsList", JSON.stringify(leadsList));
-}
-
-// Função para editar uma lead
-
-function guardarEdicao(id) {
-    const lead = leadsList.find(l => l.id == id);
-    if (!lead) return;
-
-    const titulo = document.getElementById("editTitulo").value;
-    const descricao = document.getElementById("editDescricao").value;
-    const estado = document.getElementById("editEstado").value;
-
-    if (!titulo || !descricao || !estado) return;
-
-    lead.titulo = titulo;
-    lead.descricao = descricao;
-    lead.estado = estado;
-
-    guardarLeads();
-
-    alert("Lead atualizada com sucesso");
-
-    mostrarDetalhesLead();
-}
-
-// Função para preencher preencher os filtros com as opções disponivéis
 
 function preencherFiltroEstados() {
-    const select = document.getElementById("filtroEstado");
-    select.innerHTML = `<option value="">Todos</option>`;
+  const select = document.getElementById("filtroEstado");
+  if (!select) return;
 
-    statusOptions.forEach(estado => {
-        select.innerHTML += `<option value="${estado}">${estado}</option>`;
-    });
+  select.innerHTML = `<option value="">Todos</option>`;
+  statusOptions.forEach((nome, idx) => {
+    select.innerHTML += `<option value="${idx}">${nome}</option>`;
+  });
 }
 
-// Função para listar as leads por estado
+function renderListaLeads(lista) {
+  const container = document.getElementById("listaLeads");
+  if (!container) return;
 
-function listarLeadsPorEstado(estado) {
-    const listaLeads = document.getElementById("listaLeads");
-    listaLeads.innerHTML = "";
+  if (!lista || lista.length === 0) {
+    container.innerHTML = `<p>Nenhuma lead guardada.</p>`;
+    return;
+  }
 
-    const filtradas = leadsList.filter(l => l.estado === estado);
-
-    if (filtradas.length === 0) {
-        listaLeads.innerHTML = "<p>Sem leads neste estado</p>";
-        return;
-    }
-
-    filtradas.forEach(lead => {
-        listaLeads.innerHTML += `
-            <div class="lead-item">
-                <button class="btn" onclick="abrirDetalhesLead(${lead.id})">
-                    <strong>${lead.titulo}</strong>
-                </button>
-            </div>
-        `;
-    });
+  container.innerHTML = lista
+    .map((l, i) => {
+      const nomeEstado = statusOptions[Number(l.estado)] ?? "Desconhecido";
+      return `
+        <div class="lead-item">
+          <button class="lead-btn" onclick="mostrarDetalhesLeadPorId(${l.id})">
+            <span class="lead-titulo">${l.titulo}</span>
+            <span class="lead-estado">Estado: ${nomeEstado}</span>
+          </button>
+        </div>
+      `;
+    })
+    .join("");
 }
 
+// ==========================================
+// 2. MOSTRAR DETALHES
+// ==========================================
 
-// Função para listar as leads
+function mostrarDetalhesLeadPorId(id) {
+  const lead = leadsList.find((l) => Number(l.id) === Number(id));
+  if (!lead) {
+    alert("Lead não encontrada");
+    return;
+  }
 
-async function listarLeads() {
-    const listaLeads = document.getElementById("listaLeads");
-    listaLeads.innerHTML = "Carregando...";
+  const main = document.getElementById("content");
+  const nomeEstado = statusOptions[Number(lead.estado)] ?? "Desconhecido";
 
-    try {
-        const resposta = await fetch("http://localhost:8080/backend-p2-1.0-SNAPSHOT/rest/leads");
-        const leadsFromServer = await resposta.json();
-        
-        // Atualiza a variável global para manter as funções de filtro a funcionar
-        leadsList = leadsFromServer;
+  main.innerHTML = `
+    <div class="detalhes-container">
+      <h2>Detalhes da Lead</h2>
+      <br>
 
-        listaLeads.innerHTML = "";
-        leadsList.forEach(lead => {
-            // Mapeia o int do Java para a tua string de statusOptions
-            const nomeEstado = statusOptions[lead.estado] || "Desconhecido";
-            
-            listaLeads.innerHTML += `
-                <div class="lead-item">
-                    <button class="lead-btn" onclick="abrirDetalhesLead(${lead.id})">
-                        <span class="lead-titulo">${lead.titulo}</span>
-                        <span class="lead-estado">Estado: ${nomeEstado}</span>
-                    </button>
-                </div>
-            `;
-        });
-    } catch (erro) {
-        listaLeads.innerHTML = "Erro ao carregar leads do servidor.";
-        console.error(erro);
-    }
+      <p><strong>ID:</strong> ${lead.id}</p>
+      <p><strong>Título:</strong> ${lead.titulo}</p>
+      <p><strong>Descrição:</strong> ${lead.descricao}</p>
+      <p><strong>Estado:</strong> ${nomeEstado}</p>
+
+      <br>
+      <button class="btn" onclick="editarLead(${lead.id})">
+        <i class="fa-regular fa-pen-to-square"></i> Editar
+      </button>
+      <button class="btn" onclick="removerLead(${lead.id})">
+        <i class="fa-solid fa-trash"></i> Remover
+      </button>
+      <button class="btn" onclick="carregarLeads()">
+        <i class="fa-solid fa-arrow-left"></i> Voltar
+      </button>
+    </div>
+  `;
 }
 
+// ==========================================
+// 3. FORMULÁRIOS (NOVO E EDITAR)
+// ==========================================
 
+function formNovaLead() {
+  const content = document.getElementById("content");
 
-// Função para abrir os detalhes de um Lead na página de detalhes
+  content.innerHTML = `
+    <h2>Nova Lead</h2>
 
-function abrirDetalhesLead(id) {
-    window.location.href="detalhesLeads.html?id="+id;    
-}
+    <label>Título</label>
+    <input id="leadTitulo" type="text" required><br><br>
 
-// Função para remover uma lead
+    <label>Descrição</label>
+    <textarea id="leadDescricao" required></textarea><br><br>
 
-function removerLead(id) {
-    if (!confirm("Tem a certeza que deseja remover esta lead?")) return;
+    <label>Estado</label>
+    <select id="leadEstado">
+      ${statusOptions.map((s, idx) => `<option value="${idx}" ${idx === 0 ? "selected" : ""}>${s}</option>`).join("")}
+    </select>
+    <br><br>
 
-    leadsList = leadsList.filter(l => l.id != id);
-    guardarLeads();
-    alert("Lead removida com sucesso!");
+    <button id="btnGuardarLead" class="btn" disabled type="button" onclick="guardarLead()">
+      <i class="fa-solid fa-floppy-disk"></i> Guardar
+    </button>
 
-    window.location.href = "dashboard.html#leads";
-}
+    <button class="btn" type="button" onclick="carregarLeads()">
+      <i class="fa-solid fa-xmark"></i> Cancelar
+    </button>
+  `;
 
-// Função para carregar leads do localStorage
-
-function carregarLeads() {
-    const dados = getLeads();
-    if (dados) {
-        leadsList = dados;
-        
-    }
-
-}
-
-// Função para extrair as Leads da local storage
-
-function getLeads(){
-    return JSON.parse(localStorage.getItem("leadsList"));
-}
-
-function mostrarDetalhesLead(){
-
-    carregarLeads();
-
-    const id = Number(getQueryParam("id"));
-    const lead = leadsList.find(l => l.id == id);
-
-    console.log(id);
-    console.log(getLeads());
-
-
-    const detalhesDiv = document.getElementById("detalhesLead");
-    if (!detalhesDiv) return;
-
-    if (!lead) {
-        alert("Lead não encontrada");
-        return;
-    }
-
-    detalhesDiv.innerHTML = `
-
-        <p><strong>ID:</strong> ${lead.id}</p>
-        <p><strong>Título:</strong> ${lead.titulo}</p>
-        <p><strong>Descrição:</strong> ${lead.descricao}</p>
-        <p><strong>Estado:</strong> ${lead.estado}</p>
-
-        <br>
-
-        <button class="btn" type="button" onclick="editarLead(${lead.id})">
-        <img src="/imagens/editar.jpg" alt="icon" class="icon">Editar
-        </button>
-        <button class="btn" type="button" onclick="removerLead(${lead.id})">
-        <img src="/imagens/remover.jpg" alt="icon" class="icon">Remover
-        </button>
-        <button class="btn" type="button" onclick="window.location.href='dashboard.html#leads'">
-        <img src="/imagens/voltar.jpg" alt="icon" class="icon">Voltar
-        </button>
-    `;
+  ativarValidacaoNovaLead();
 }
 
 function editarLead(id) {
-  const lead = leadsList.find(l => l.id === id);
-  const detalhesDiv = document.getElementById("detalhesLead");
-  if (!detalhesDiv || !lead) return;
+  const lead = leadsList.find((l) => Number(l.id) === Number(id));
+  if (!lead) return;
 
-  detalhesDiv.innerHTML = `
-    <label>Título</label><br>
-    <input required type="text" id="editTitulo" value="${lead.titulo}"><br><br>
+  const main = document.getElementById("content");
 
-    <label>Descrição</label><br>
-    <textarea required id="editDescricao">${lead.descricao}</textarea><br><br>
+  main.innerHTML = `
+    <h2>Editar Lead</h2>
 
-    <label>Estado</label><br>
-    <select required id="editEstado">
-      ${statusOptions.map(s =>
-        `<option value="${s}" ${s === lead.estado ? "selected" : ""}>${s}</option>`
-      ).join("")}
+    <label>Título</label>
+    <input id="editTitulo" type="text" value="${lead.titulo}"><br><br>
+
+    <label>Descrição</label>
+    <textarea id="editDescricao">${lead.descricao}</textarea><br><br>
+
+    <label>Estado</label>
+    <select id="editEstado">
+      ${statusOptions
+        .map((s, idx) => `<option value="${idx}" ${Number(lead.estado) === idx ? "selected" : ""}>${s}</option>`)
+        .join("")}
     </select>
 
     <br><br>
 
-    <button id="btnGuardarEdicaoLead" class="btn" disabled type="button" onclick="guardarEdicao(${lead.id})">
-      <img src="/imagens/guardar.jpg" alt="icon" class="icon">Guardar
+    <button id="btnGuardarEdicaoLead" class="btn" disabled type="button" onclick="guardarLead(${lead.id})">
+      <i class="fa-solid fa-floppy-disk"></i> Guardar
     </button>
 
-    <button class="btn" type="button" onclick="mostrarDetalhesLead()">
-      <img src="/imagens/cancelar.jpg" alt="icon" class="icon">Cancelar
+    <button class="btn" type="button" onclick="mostrarDetalhesLeadPorId(${lead.id})">
+      <i class="fa-solid fa-xmark"></i> Cancelar
     </button>
   `;
 
-  ativarValidacaoEdicaoLead(lead);
-
+  ativarValidacaoEdicaoLead({
+    titulo: lead.titulo,
+    descricao: lead.descricao,
+    estado: Number(lead.estado),
+  });
 }
 
+// ==========================================
+// 4. CRUD (GUARDAR E REMOVER)
+// ==========================================
 
-// Função para que desativa o botão Guardar enquanto os campos de título e descrição não estão preenchidos
+async function guardarLead(id = null) {
+  const username = sessionStorage.getItem("username");
+  const password = sessionStorage.getItem("password");
+  if (!username) return;
+
+  const titulo = (id === null ? document.getElementById("leadTitulo") : document.getElementById("editTitulo")).value.trim();
+  const descricao = (id === null ? document.getElementById("leadDescricao") : document.getElementById("editDescricao")).value.trim();
+  const estado = Number((id === null ? document.getElementById("leadEstado") : document.getElementById("editEstado")).value);
+
+  if (titulo === "" || descricao === "") return;
+
+  const dados = { titulo, descricao, estado };
+
+  try {
+    let response;
+
+    if (id === null) {
+      // POST: Nova Lead
+      response = await fetch(LEADS_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          username,
+          password,
+        },
+        body: JSON.stringify(dados),
+      });
+    } else {
+      // PUT: Editar Lead
+      response = await fetch(`${LEADS_API_URL}/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          username,
+          password,
+        },
+        body: JSON.stringify(dados),
+      });
+    }
+
+    if (response.ok) {
+      alert(id === null ? "Lead adicionada com sucesso!" : "Lead atualizada com sucesso!");
+      await carregarLeads();
+    } else {
+      alert("Erro do Java: " + (await response.text()));
+    }
+  } catch (error) {
+    console.error("Falha ao guardar:", error);
+  }
+}
+
+async function removerLead(id) {
+  if (!confirm("Tem a certeza que deseja remover esta lead?")) return;
+
+  const username = sessionStorage.getItem("username");
+  const password = sessionStorage.getItem("password");
+  if (!username) return;
+
+  try {
+    const response = await fetch(`${LEADS_API_URL}/${id}`, {
+      method: "DELETE",
+      headers: { username, password },
+    });
+
+    if (response.ok) {
+      alert("Lead removida!");
+      await carregarLeads();
+    } else {
+      alert("Erro ao remover: " + (await response.text()));
+    }
+  } catch (error) {
+    console.error("Erro na ligação:", error);
+  }
+}
+
+// ==========================================
+// 5. VALIDAÇÕES (mesmo padrão do clientes.js)
+// ==========================================
+
 function ativarValidacaoNovaLead() {
-
-  // Vai buscar o input do título, a descrição e o botão Guardarpelo id
   const titulo = document.getElementById("leadTitulo");
   const descricao = document.getElementById("leadDescricao");
-  const btnGuardar = document.getElementById("btnGuardarLead");
+  const btn = document.getElementById("btnGuardarLead");
 
-  // Se algum dos elementos não existir no DOM, sai da função
-  if (!titulo || !descricao || !btnGuardar) return;
+  if (!titulo || !descricao || !btn) return;
 
-  // Função que verifica se os campos estão preenchidos
   const validar = () => {
-
-    // Verifica se os dois campos têm texto; trim() - ignora espaços em branco, devolve true ou false
-    const camposNaoVazios = titulo.value.trim() !== "" && descricao.value.trim() !== "";
-
-    // se camposNaoVazios o botão fica ativo; senão, o botão fica desativo
-    btnGuardar.disabled = !camposNaoVazios;
+    const ok = titulo.value.trim() !== "" && descricao.value.trim() !== "";
+    btn.disabled = !ok;
   };
 
-  // Sempre que o utilizador escreve no campo título e no campo descrição, executa a função validar()
   titulo.addEventListener("input", validar);
   descricao.addEventListener("input", validar);
-
   validar();
 }
 
-function ativarValidacaoEdicaoLead(leadOriginal) {
-
+function ativarValidacaoEdicaoLead(original) {
   const titulo = document.getElementById("editTitulo");
   const descricao = document.getElementById("editDescricao");
   const estado = document.getElementById("editEstado");
@@ -316,33 +332,18 @@ function ativarValidacaoEdicaoLead(leadOriginal) {
   if (!titulo || !descricao || !estado || !btn) return;
 
   const validar = () => {
-
     const t = titulo.value.trim();
     const d = descricao.value.trim();
-    const e = estado.value;
+    const e = Number(estado.value);
 
-    // Todos os campos têm de estar preenchidos
-    const preenchido = t !== "" && d !== "" && e !== "";
+    const preenchido = t !== "" && d !== "";
+    const mudou = t !== original.titulo || d !== original.descricao || e !== original.estado;
 
-    // Verifica se houve alterações
-    const mudou =
-      t !== leadOriginal.titulo ||
-      d !== leadOriginal.descricao ||
-      e !== leadOriginal.estado;
-
-    // Botão só ativa se ambas forem verdade
     btn.disabled = !(preenchido && mudou);
   };
 
   titulo.addEventListener("input", validar);
   descricao.addEventListener("input", validar);
   estado.addEventListener("change", validar);
-
-  validar(); // estado inicial
-}
-
-
-function getQueryParam(name, url = window.location.href) {
-  const params = new URL(url).searchParams;
-  return params.has(name) ? params.get(name) : null;
+  validar();
 }

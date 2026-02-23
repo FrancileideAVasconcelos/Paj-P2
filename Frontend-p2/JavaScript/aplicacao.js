@@ -86,39 +86,13 @@ function loadFooter() {
 // Funções para carregar as Leads
 
 function loadLeads() {
-
-    if (window.location.hash !== "#leads") {
-        window.location.hash = "#leads";
-    }
-    content.innerHTML = `
-    <h2>Leads</h2>
-    <br>
-    <label for="filtroEstado">Filtrar por estado:</label>
-    <select id="filtroEstado">
-    <option value="">Todos</option>
-    </select>
-
-    <ul id="listaLeads"></ul>
-    <br>
-    <button class="btn" type="button" onclick="loadNovoLead()"><img src="/imagens/adicionar.jpg" alt="icon" class="icon">Adicionar Lead</button>
-    `;
-
-    preencherFiltroEstados();
-    listarLeads();
-
-    const filtro = document.getElementById("filtroEstado");
-    filtro.addEventListener("change", () => {
-        const estadoSelecionado = filtro.value;
-
-        if (estadoSelecionado === "") {
-            listarLeads();
-        } else {
-            listarLeadsPorEstado(estadoSelecionado);
-        }
-    });
-    
+  if (window.location.hash !== "#leads") {
+    window.location.hash = "#leads";
+  }
+  carregarLeads();
 }
 
+/*
 function loadNovoLead() {
     content.innerHTML = `
     <h2>Nova Lead</h2>
@@ -138,7 +112,7 @@ function loadNovoLead() {
     `;
     // Ativa a função para validar os campos de título e descrição e desativar o botão Guardar enquanto os campos não estão preenchidos
     ativarValidacaoNovaLead();
-}
+}*/
 
 // Funções para carregar os Clientes
 
